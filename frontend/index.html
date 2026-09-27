@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Review Visualization & Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 font-sans">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-indigo-700 text-white shadow">
+            <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+                <h1 class="text-2xl font-bold">🏨 Hotel Insights Dashboard</h1>
+                <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded shadow transition">
+                    + Add Review
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-8">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <h3 class="text-sm font-medium text-slate-500">Total Reviews</h3>
+                    <p id="kpi-total" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <h3 class="text-sm font-medium text-slate-500">Average Rating</h3>
+                    <p id="kpi-avg" class="text-3xl font-bold text-slate-800 mt-2">0.0 / 5.0</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <h3 class="text-sm font-medium text-slate-500">Positive Sentiment Share</h3>
+                    <p id="kpi-pos" class="text-3xl font-bold text-emerald-600 mt-2">0%</p>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Sentiment Breakdown</h3>
+                    <div class="relative h-64 flex justify-center">
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Average Rating per Hotel</h3>
+                    <div class="relative h-64 flex justify-center">
+                        <canvas id="hotelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters & Reviews Table -->
+            <div class="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h3 class="text-lg font-semibold text-slate-800">Review Feed</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <input type="text" id="filter-hotel" placeholder="Filter hotel..." class="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <select id="filter-sentiment" class="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">All Sentiments</option>
+                            <option value="Positive">Positive</option>
+                            <option value="Neutral">Neutral</option>
+                            <option value="Negative">Negative</option>
+                        </select>
+                        <button onclick="loadData()" class="bg-slate-800 hover:bg-slate-700 text-white text-sm px-4 py-2 rounded shadow transition">Apply</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs font-semibold">
+                                <th class="p-4">Hotel</th>
+                                <th class="p-4">Reviewer</th>
+                                <th class="p-4">Rating</th>
+                                <th class="p-4">Sentiment</th>
+                                <th class="p-4">Comment</th>
+                                <th class="p-4">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviews-table-body" class="divide-y divide-slate-200 text-sm text-slate-700">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-slate-200 text-center py-4 text-slate-500 text-sm">
+            &copy; 2023 Hotel Insights Dashboard. All rights reserved.
+        </footer>
+    </div>
+
+    <!-- Add Review Modal -->
+    <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Add New Hotel Review</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+            <form id="reviewForm" onsubmit="submitReview(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Hotel Name</label>
+                    <input type="text" id="modal-hotel" required class="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Reviewer Name</label>
+                    <input type="text" id="modal-reviewer" required class="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Rating (1-5)</label>
+                    <select id="modal-rating" class="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Average</option>
+                        <option value="2">2 - Poor</option>
+                        <option value="1">1 - Terrible</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Comment</label>
+                    <textarea id="modal-comment" rows="3" required class="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Date</label>
+                    <input type="date" id="modal-date" required class="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-md text-sm text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-500">Save Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8000/api";
+        let sentimentChartInstance = null;
+        let hotelChartInstance = null;
+
+        document.getElementById('modal-date').valueAsDate = new Date();
+
+        async function loadData() {
+            await fetchAnalytics();
+            await fetchReviews();
+        }
+
+        async function fetchAnalytics() {
+            try {
+                const res = await fetch(`${API_BASE}/analytics`);
+                const data = await res.json();
+
+                document.getElementById('kpi-total').innerText = data.total_reviews;
+                document.getElementById('kpi-avg').innerText = data.average_rating.toFixed(1) + " / 5.0";
+                
+                let posShare = 0;
+                if (data.total_reviews > 0) {
+                    posShare = Math.round((data.sentiment_breakdown.Positive / data.total_reviews) * 100);
+                }
+                document.getElementById('kpi-pos').innerText = posShare + "%";
+
+                renderSentimentChart(data.sentiment_breakdown);
+                renderHotelChart(data.hotel_breakdown);
+            } catch (err) {
+                console.error("Failed to load analytics", err);
+            }
+        }
+
+        async function fetchReviews() {
+            const hotel = document.getElementById('filter-hotel').value;
+            const sentiment = document.getElementById('filter-sentiment').value;
+
+            let url = `${API_BASE}/reviews?`;
+            if (hotel) url += `hotel=${encodeURIComponent(hotel)}&`;
+            if (sentiment) url += `sentiment=${encodeURIComponent(sentiment)}&`;
+
+            try {
+                const res = await fetch(url);
+                const reviews = await res.json();
+
+                const tbody = document.getElementById('reviews-table-body');
+                tbody.innerHTML = "";
+
+                if (reviews.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No reviews found.</td></tr>`;
+                    return;
+                }
+
+                reviews.forEach(r => {
+                    let badgeColor = "bg-slate-100 text-slate-800";
+                    if (r.sentiment === "Positive") badgeColor = "bg-emerald-100 text-emerald-800";
+                    else if (r.sentiment === "Negative") badgeColor = "bg-rose-100 text-rose-800";
+                    else if (r.sentiment === "Neutral") badgeColor = "bg-amber-100 text-amber-800";
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4 font-medium text-slate-900">${r.hotel_name}</td>
+                        <td class="p-4">${r.reviewer_name}</td>
+                        <td class="p-4">${r.rating} / 5</td>
+                        <td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${badgeColor}">${r.sentiment}</span></td>
+                        <td class="p-4 max-w-xs truncate">${r.comment}</td>
+                        <td class="p-4 text-slate-500">${r.date}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Failed to load reviews", err);
+            }
+        }
+
+        function renderSentimentChart(breakdown) {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            if (sentimentChartInstance) sentimentChartInstance.destroy();
+
+            sentimentChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(breakdown),
+                    datasets: [{
+                        data: Object.values(breakdown),
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function renderHotelChart(breakdown) {
+            const ctx = document.getElementById('hotelChart').getContext('2d');
+            if (hotelChartInstance) hotelChartInstance.destroy();
+
+            hotelChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(breakdown),
+                    datasets: [{
+                        label: 'Average Rating',
+                        data: Object.values(breakdown),
+                        backgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 5 }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function openModal() {
+            document.getElementById('reviewModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('reviewModal').classList.add('hidden');
+            document.getElementById('reviewForm').reset();
+            document.getElementById('modal-date').valueAsDate = new Date();
+        }
+
+        async function submitReview(e) {
+            e.preventDefault();
+            const payload = {
+                hotel_name: document.getElementById('modal-hotel').value,
+                reviewer_name: document.getElementById('modal-reviewer').value,
+                rating: parseInt(document.getElementById('modal-rating').value),
+                comment: document.getElementById('modal-comment').value,
+                date: document.getElementById('modal-date').value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/reviews`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    closeModal();
+                    loadData();
+                } else {
+                    alert('Failed to submit review');
+                }
+            } catch (err) {
+                console.error("Error submitting review", err);
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
