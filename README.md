@@ -1,35 +1,41 @@
 # Hotel Review Visualization and Analysis Dashboard
 
-A full-stack web application built with FastAPI, Tailwind CSS, and Chart.js designed to monitor, analyze, and visualize hotel guest reviews and sentiment data.
+A full-stack web application providing automated sentiment analysis, visualizations, and management for hotel reviews.
 
-## Project Architecture
-- **Backend**: FastAPI (Python 3.10+) with automatic sentiment classification, analytics aggregation, and Pytest test suite.
-- **Frontend**: Responsive Tailwind CSS dashboard equipped with Chart.js analytics visualizations.
-- **Orchestration**: Docker Compose running backend FastAPI service and Nginx frontend service.
+## Tech Stack
+- **Backend**: FastAPI (Python 3.10), Pydantic, Pytest
+- **Frontend**: Tailwind CSS, Chart.js, HTML5
+- **Containerization**: Docker & Docker Compose
 
-## Quick Start with Docker Compose
-Ensure you have Docker and Docker Compose installed on your machine.
+---
 
-1. Run the multi-container stack:
-   ```bash
-   docker-compose up --build
-   ```
-2. Access the Dashboard:
-   - Frontend UI: `http://localhost`
-   - Backend API Docs (Swagger): `http://localhost:8000/docs`
+## Quick Start with Docker
+Ensure you have Docker and Docker Compose installed.
 
-## Running Locally Without Docker
+```bash
+docker-compose up --build
+```
 
-### 1. Backend Setup
+- **Backend API**: http://localhost:8000
+- **API Documentation (Swagger)**: http://localhost:8000/docs
+- **Frontend**: Open `frontend/index.html` directly in any web browser.
+
+---
+
+## Local Development (Without Docker)
+
+### 1. Run the Backend
 ```bash
 cd backend
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
-Run unit tests:
+
+### 2. Run Tests
 ```bash
+cd backend
 pytest
 ```
 
-### 2. Frontend Setup
-Serve the `frontend/index.html` file using any static file server or open it directly in your web browser (ensure the backend is active at `http://localhost:8000`).
+### 3. Open Frontend
+Open `frontend/index.html` in your browser. (Make sure the backend is running on port 8000).

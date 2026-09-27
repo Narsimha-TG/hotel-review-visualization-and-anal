@@ -3,7 +3,7 @@ from main import app
 
 client = TestClient(app)
 
-def test_health_check():
+def test_health():
     response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
@@ -18,9 +18,10 @@ def test_get_reviews():
 def test_create_review():
     payload = {
         "hotel_name": "Test Hotel",
-        "reviewer_name": "John Doe",
+        "reviewer_name": "Tester",
         "rating": 5.0,
-        "comment": "Amazing experience, absolutely loved everything!"
+        "comment": "Fantastic stay, everything was pristine!",
+        "date": "2023-10-10"
     }
     response = client.post("/api/reviews", json=payload)
     assert response.status_code == 201
@@ -29,7 +30,7 @@ def test_create_review():
     assert data["sentiment"] == "Positive"
     assert "id" in data
 
-def test_get_analytics():
+def test_analytics():
     response = client.get("/api/analytics")
     assert response.status_code == 200
     data = response.json()
