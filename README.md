@@ -1,36 +1,33 @@
 # Hotel Review Visualization and Analysis Dashboard
 
-A modern full-stack dashboard built with FastAPI (Backend) and Tailwind CSS / Chart.js (Frontend) for analyzing hotel reviews and visualizing sentiment analytics.
+A modern full-stack web application designed to collect, visualize, and analyze hotel customer reviews with built-in automated sentiment categorization.
 
-## Project Structure
-- `backend/`: FastAPI application, Pydantic models, pytest suite, and Dockerfile.
-- `frontend/`: Responsive dashboard featuring live charts and filtering capabilities.
-- `docker-compose.yml`: Multi-container orchestration configuration.
+## Project Architecture
+- **Backend**: Python 3.10+, FastAPI, Pytest, Uvicorn
+- **Frontend**: Single-page application using Tailwind CSS (via CDN) and Chart.js
+- **Containerization**: Docker & Docker Compose
 
-## Getting Started
+## Quick Start with Docker
 
-### Running with Docker Compose
-Ensure Docker and Docker Compose are installed, then run:
-```bash
-docker-compose up --build
-```
-- Backend API & Docs: http://localhost:8000/docs
-- Open `frontend/index.html` directly in your browser to access the dashboard.
+1. Ensure Docker and Docker Compose are installed on your machine.
+2. Run the following command from the root directory:
+   ```bash
+   docker-compose up --build
+   ```
+3. The backend API will be available at `http://localhost:8000`.
+4. Open `frontend/index.html` directly in your web browser to interact with the dashboard.
 
-### Running Locally (Without Docker)
+## Local Development (Without Docker)
 
-#### 1. Backend
+### Backend Setup
 ```bash
 cd backend
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-#### 2. Running Tests
+### Running Tests
 ```bash
 cd backend
-pytest
+pytest test_api.py
 ```
-
-#### 3. Frontend
-Open `frontend/index.html` in any modern web browser.

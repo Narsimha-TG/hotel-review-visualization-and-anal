@@ -4,206 +4,260 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Review Visualization and Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-sky-400">Hotel Review Dashboard</h1>
-                <p class="text-slate-400">Visualize and analyze guest sentiments and ratings</p>
-            </div>
-            <div class="flex items-center gap-4">
-                <label for="csvFile" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-5 py-2.5 rounded-full cursor-pointer shadow-lg transition duration-200 ease-in-out text-center">
-                    Import CSV
-                </label>
-                <input type="file" id="csvFile" accept=".csv" class="hidden" onchange="uploadCSV(event)">
-            </div>
-        </header>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+    <header class="bg-indigo-600 text-white shadow-md py-4 px-6 mb-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tight">🏨 HotelReview Analytics & Insights</h1>
+            <span class="bg-indigo-700 text-xs px-3 py-1 rounded-full font-medium">Enterprise Edition</span>
+        </div>
+    </header>
 
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow">
-                <h3 class="text-slate-400 text-sm font-medium uppercase tracking-wider">Total Reviews</h3>
-                <p id="totalReviews" class="text-3xl font-bold text-white mt-2">0</p>
+    <main class="max-w-7xl mx-auto px-6 space-y-6">
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <p class="text-sm text-slate-500 font-medium">Total Reviews</p>
+                <p id="kpi-total" class="text-3xl font-bold text-slate-900 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow">
-                <h3 class="text-slate-400 text-sm font-medium uppercase tracking-wider">Average Rating</h3>
-                <p id="avgRating" class="text-3xl font-bold text-white mt-2">0.0</p>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <p class="text-sm text-slate-500 font-medium">Average Rating</p>
+                <p id="kpi-avg" class="text-3xl font-bold text-slate-900 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow">
-                <h3 class="text-slate-400 text-sm font-medium uppercase tracking-wider">Sentiment Ratio (Pos/Neg)</h3>
-                <p id="sentimentRatio" class="text-3xl font-bold text-white mt-2">0%</p>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <p class="text-sm text-slate-500 font-medium">Positive Sentiment Ratio</p>
+                <p id="kpi-sentiment" class="text-3xl font-bold text-slate-900 mt-1">-</p>
             </div>
         </div>
 
         <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow">
-                <h3 class="text-xl font-semibold mb-4 text-slate-200">Rating Distribution</h3>
-                <div class="relative h-64">
-                    <canvas id="ratingChart"></canvas>
-                </div>
-            </div>
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow">
-                <h3 class="text-xl font-semibold mb-4 text-slate-200">Sentiment Analysis</h3>
-                <div class="relative h-64">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold mb-4">Sentiment Breakdown</h2>
+                <div class="relative h-64 flex justify-center">
                     <canvas id="sentimentChart"></canvas>
                 </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold mb-4">Average Rating per Hotel</h2>
+                <div class="relative h-64 flex justify-center">
+                    <canvas id="hotelChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls & Add Review Form -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Filter Section -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1">
+                <h2 class="text-lg font-semibold mb-4">Filter Reviews</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Hotel Name</label>
+                        <input type="text" id="filter-hotel" placeholder="Search hotel..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Sentiment</label>
+                        <select id="filter-sentiment" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">All Sentiments</option>
+                            <option value="Positive">Positive</option>
+                            <option value="Neutral">Neutral</option>
+                            <option value="Negative">Negative</option>
+                        </select>
+                    </div>
+                    <button onclick="loadData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm transition">Apply Filters</button>
+                </div>
+            </div>
+
+            <!-- Add Review Section -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                <h2 class="text-lg font-semibold mb-4">Submit New Review</h2>
+                <form id="reviewForm" onsubmit="submitReview(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Hotel Name</label>
+                        <input type="text" id="new-hotel" required placeholder="e.g. Grand Palace Hotel" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">City</label>
+                        <input type="text" id="new-city" required placeholder="e.g. New York" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Rating (1-5)</label>
+                        <input type="number" id="new-rating" min="1" max="5" required value="5" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Review Text</label>
+                        <textarea id="new-text" rows="2" required placeholder="Write your detailed experience here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition">Submit Review</button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <!-- Reviews Table -->
-        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow overflow-hidden">
-            <div class="p-6 border-b border-slate-700">
-                <h3 class="text-xl font-semibold text-slate-200">Recent Reviews</h3>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-lg font-semibold">Customer Reviews Feed</h2>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-700/50 text-slate-300 text-sm uppercase">
-                            <th class="p-4">Reviewer</th>
-                            <th class="p-4">Rating</th>
-                            <th class="p-4">Comment</th>
-                            <th class="p-4">Sentiment</th>
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+                        <tr>
+                            <th class="px-6 py-3">Hotel</th>
+                            <th class="px-6 py-3">City</th>
+                            <th class="px-6 py-3">Rating</th>
+                            <th class="px-6 py-3">Sentiment</th>
+                            <th class="px-6 py-3">Review</th>
+                            <th class="px-6 py-3">Date</th>
                         </tr>
                     </thead>
-                    <tbody id="reviewsTableBody" class="divide-y divide-slate-700 text-slate-300">
-                        <tr>
-                            <td colspan="4" class="p-4 text-center text-slate-500">No reviews loaded. Please upload a CSV.</td>
-                        </tr>
+                    <tbody id="reviews-table-body" class="divide-y divide-slate-200">
+                        <!-- Populated by JS -->
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
+    </main>
+
+    <footer class="text-center py-6 text-slate-400 text-xs mt-12">
+        Hotel Review Visualization & Analysis Dashboard &copy; 2024
+    </footer>
 
     <script>
-        let ratingChartInstance = null;
+        const API_BASE = "http://localhost:8000";
         let sentimentChartInstance = null;
+        let hotelChartInstance = null;
 
-        async function fetchDashboardData() {
+        async function loadData() {
             try {
-                const response = await fetch('/api/data');
-                const data = await response.json();
-                updateDashboard(data);
+                const hotelFilter = document.getElementById('filter-hotel').value;
+                const sentimentFilter = document.getElementById('filter-sentiment').value;
+                
+                let query = `?`;
+                if (hotelFilter) query += `hotel_name=${encodeURIComponent(hotelFilter)}&`;
+                if (sentimentFilter) query += `sentiment=${encodeURIComponent(sentimentFilter)}&`;
+
+                const [analyticsRes, reviewsRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/analytics`),
+                    fetch(`${API_BASE}/api/reviews${query}`)
+                ]);
+
+                const analytics = await analyticsRes.json();
+                const reviews = await reviewsRes.json();
+
+                updateKPIs(analytics);
+                renderCharts(analytics);
+                renderTable(reviews);
             } catch (err) {
-                console.error('Error fetching data:', err);
+                console.error("Error loading dashboard data:", err);
             }
         }
 
-        async function uploadCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    updateDashboard(result);
-                } else {
-                    alert(result.error || 'Failed to upload CSV');
-                }
-            } catch (err) {
-                console.error('Error uploading CSV:', err);
-                alert('Error uploading CSV');
-            }
+        function updateKPIs(data) {
+            document.getElementById('kpi-total').innerText = data.total_reviews;
+            document.getElementById('kpi-avg').innerText = data.avg_rating + ' / 5.0';
+            const pos = data.sentiment_breakdown['Positive'] || 0;
+            const ratio = data.total_reviews > 0 ? Math.round((pos / data.total_reviews) * 100) : 0;
+            document.getElementById('kpi-sentiment').innerText = ratio + '%';
         }
 
-        function updateDashboard(data) {
-            document.getElementById('totalReviews').innerText = data.total_reviews;
-            document.getElementById('avgRating').innerText = data.avg_rating.toFixed(1);
-            document.getElementById('sentimentRatio').innerText = (data.sentiment_percentage || 0) + '%';
-
-            // Update table
-            const tbody = document.getElementById('reviewsTableBody');
-            tbody.innerHTML = '';
-            if (data.reviews && data.reviews.length > 0) {
-                data.reviews.forEach(r => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-700/30';
-                    tr.innerHTML = `
-                        <td class="p-4 font-medium text-white">${r.reviewer || 'Anonymous'}</td>
-                        <td class="p-4">${r.rating}</td>
-                        <td class="p-4 max-w-xs truncate">${r.comment || ''}</td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                r.sentiment === 'Positive' ? 'bg-emerald-900 text-emerald-300' :
-                                r.sentiment === 'Negative' ? 'bg-rose-900 text-rose-300' : 'bg-amber-900 text-amber-300'
-                            }">${r.sentiment || 'Neutral'}</span>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No reviews found.</td></tr>`;
-            }
-
-            // Update Charts
-            updateRatingChart(data.rating_counts || {1:0, 2:0, 3:0, 4:0, 5:0});
-            updateSentimentChart(data.sentiment_counts || {Positive:0, Neutral:0, Negative:0});
-        }
-
-        function updateRatingChart(counts) {
-            const ctx = document.getElementById('ratingChart').getContext('2d');
-            if (ratingChartInstance) ratingChartInstance.destroy();
-
-            ratingChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
-                    datasets: [{
-                        label: 'Reviews count',
-                        data: [counts[1]||0, counts[2]||0, counts[3]||0, counts[4]||0, counts[5]||0],
-                        backgroundColor: '#38bdf8',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        function updateSentimentChart(counts) {
-            const ctx = document.getElementById('sentimentChart').getContext('2d');
+        function renderCharts(data) {
+            // Sentiment Chart
+            const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
             if (sentimentChartInstance) sentimentChartInstance.destroy();
-
-            sentimentChartInstance = new Chart(ctx, {
+            sentimentChartInstance = new Chart(sentimentCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Positive', 'Neutral', 'Negative'],
+                    labels: Object.keys(data.sentiment_breakdown),
                     datasets: [{
-                        data: [counts.Positive||0, counts.Neutral||0, counts.Negative||0],
-                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
-                        borderWidth: 0
+                        data: Object.values(data.sentiment_breakdown),
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Hotel Rating Chart
+            const hotelCtx = document.getElementById('hotelChart').getContext('2d');
+            if (hotelChartInstance) hotelChartInstance.destroy();
+            hotelChartInstance = new Chart(hotelCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.hotel_ratings),
+                    datasets: [{
+                        label: 'Average Rating',
+                        data: Object.values(data.hotel_ratings),
+                        backgroundColor: '#6366f1'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
-                    }
+                    scales: { y: { beginAtZero: true, max: 5 } }
                 }
             });
         }
 
-        // Initial fetch
-        fetchDashboardData();
+        function renderTable(reviews) {
+            const tbody = document.getElementById('reviews-table-body');
+            tbody.innerHTML = '';
+            if (reviews.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-slate-400">No reviews found</td></tr>`;
+                return;
+            }
+            reviews.forEach(r => {
+                let badgeColor = 'bg-slate-100 text-slate-800';
+                if (r.sentiment === 'Positive') badgeColor = 'bg-emerald-100 text-emerald-800';
+                if (r.sentiment === 'Neutral') badgeColor = 'bg-amber-100 text-amber-800';
+                if (r.sentiment === 'Negative') badgeColor = 'bg-rose-100 text-rose-800';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-slate-900">${r.hotel_name}</td>
+                    <td class="px-6 py-4 text-slate-600">${r.city}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-700">${r.rating} ★</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${badgeColor}">${r.sentiment}</span></td>
+                    <td class="px-6 py-4 text-slate-600 max-w-xs truncate" title="${r.review_text}">${r.review_text}</td>
+                    <td class="px-6 py-4 text-slate-400 text-xs">${r.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function submitReview(e) {
+            e.preventDefault();
+            const payload = {
+                hotel_name: document.getElementById('new-hotel').value,
+                city: document.getElementById('new-city').value,
+                rating: parseInt(document.getElementById('new-rating').value),
+                review_text: document.getElementById('new-text').value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/reviews`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    document.getElementById('reviewForm').reset();
+                    loadData();
+                    alert('Review submitted successfully!');
+                } else {
+                    alert('Failed to submit review.');
+                }
+            } catch (err) {
+                console.error('Error submitting review:', err);
+            }
+        }
+
+        // Initial load
+        loadData();
     </script>
 </body>
 </html>
