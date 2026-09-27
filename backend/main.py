@@ -53,6 +53,11 @@ def get_dashboard_data():
         "recent_reviews": MOCK_REVIEWS[::-1]
     }
 
+@app.get("/api/reviews")
+def get_reviews():
+    """Returns the review list for test_api.py and client frontend"""
+    return MOCK_REVIEWS
+
 @app.get("/")
 def serve_index():
     index_path = os.path.join("frontend", "index.html")
