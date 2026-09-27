@@ -1,33 +1,48 @@
 # Hotel Review Visualization and Analysis Dashboard
 
-A modern full-stack application for capturing, visualizing, and analyzing hotel customer reviews with automated sentiment classification.
+A modern, production-ready full-stack application for visualizing and analyzing hotel guest reviews with automated sentiment classification.
+
+## Tech Stack
+- **Backend**: FastAPI, Pydantic, Uvicorn, Pytest
+- **Frontend**: Tailwind CSS, HTML5, Vanilla JavaScript
+- **Containerization**: Docker & Docker Compose
 
 ## Project Structure
+```text
+├── backend/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── main.py
+│   └── test_api.py
+├── frontend/
+│   └── index.html
+├── docker-compose.yml
+└── README.md
+```
 
-- `backend/`: FastAPI Python application with automated tests and Dockerfile.
-- `frontend/`: Responsive Tailwind CSS single-page dashboard utilizing Chart.js.
-- `docker-compose.yml`: Multi-container orchestration specification.
-
-## Quick Start with Docker
-
-Ensure you have Docker and Docker Compose installed:
+## Running with Docker (Recommended)
+Make sure you have Docker and Docker Compose installed.
 
 ```bash
 docker-compose up --build
 ```
 
-The backend API will be available at `http://localhost:8000`.
+- Access the **Frontend Dashboard**: [http://localhost](http://localhost)
+- Access the **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-## Running the Frontend
+## Running Locally Without Docker
 
-Open `frontend/index.html` directly in any web browser or serve via a local static server (e.g., `npx serve frontend`).
-
-## Running Backend Tests
-
-Navigate to the `backend/` directory and execute pytest:
-
+### Backend Setup
 ```bash
 cd backend
 pip install -r requirements.txt
-pytest -v
+uvicorn main:app --reload --port 8000
 ```
+
+### Running Tests
+```bash
+pytest backend/test_api.py
+```
+
+### Frontend Setup
+Open `frontend/index.html` in your browser or serve it via a simple HTTP server (e.g., `python3 -m http.server 3000` from the `frontend/` directory).

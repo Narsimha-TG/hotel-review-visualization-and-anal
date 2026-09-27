@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,13 +12,9 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                        }
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        darkborder: '#334155'
                     }
                 }
             }
@@ -26,156 +22,162 @@
     </script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome CDN -->
+    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-200">
+<body class="bg-darkbg text-slate-100 min-h-screen font-sans antialiased">
 
-    <!-- Header -->
-    <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <!-- Navigation / Header -->
+    <header class="bg-cardbg border-b border-darkborder sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
-                <div class="bg-brand-600 text-white p-2 rounded-lg">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
                     <i class="fa-solid fa-hotel text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight">HotelInsight Analytics</h1>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Review Visualization & Sentiment Dashboard</p>
+                    <h1 class="text-xl font-bold tracking-tight text-white">HotelPulse Analytics</h1>
+                    <p class="text-xs text-slate-400">Review Visualization & Intelligence Dashboard</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-4">
-                <!-- Theme Toggle Button -->
-                <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
-                </button>
-                <button onclick="openAddModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition flex items-center space-x-2">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Add Review</span>
+
+            <!-- Controls & Filters -->
+            <div class="flex flex-wrap items-center gap-3">
+                <div>
+                    <select id="hotelFilter" class="bg-slate-800 border border-darkborder text-slate-200 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
+                        <option value="all">All Hotels</option>
+                    </select>
+                </div>
+                <button onclick="fetchDashboardData()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition duration-200 shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Refresh
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Dashboard Container -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <!-- KPI Stats Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+        <!-- KPI / Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Total Reviews -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Reviews</p>
-                    <h3 id="statTotalReviews" class="text-2xl font-bold mt-1">-</h3>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Reviews</p>
+                    <h3 id="kpiTotalReviews" class="text-3xl font-ext500 font-bold text-white mt-1">--</h3>
                 </div>
-                <div class="p-3 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-lg">
-                    <i class="fa-solid fa-comments text-xl"></i>
+                <div class="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-comments"></i>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+            <!-- Average Rating -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Average Rating</p>
-                    <h3 id="statAvgRating" class="text-2xl font-bold mt-1">-</h3>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Average Rating</p>
+                    <h3 id="kpiAvgRating" class="text-3xl font-bold text-white mt-1">--</h3>
                 </div>
-                <div class="p-3 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-lg">
-                    <i class="fa-solid fa-star text-xl"></i>
+                <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-star"></i>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+            <!-- Positive Sentiment -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Positive Sentiment</p>
-                    <h3 id="statPositiveSentiment" class="text-2xl font-bold mt-1">-</h3>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Positive Sentiment</p>
+                    <h3 id="kpiPositiveSentiment" class="text-3xl font-bold text-white mt-1">--</h3>
                 </div>
-                <div class="p-3 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                    <i class="fa-solid fa-face-smile text-xl"></i>
+                <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-face-smile"></i>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+            <!-- Negative Sentiment -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Negative Sentiment</p>
-                    <h3 id="statNegativeSentiment" class="text-2xl font-bold mt-1">-</h3>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Negative Sentiment</p>
+                    <h3 id="kpiNegativeSentiment" class="text-3xl font-bold text-white mt-1">--</h3>
                 </div>
-                <div class="p-3 bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 rounded-lg">
-                    <i class="fa-solid fa-face-frown text-xl"></i>
+                <div class="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-xl flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-face-frown"></i>
                 </div>
             </div>
         </div>
 
         <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Sentiment Trend / Distribution -->
-            <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                <h2 class="text-base font-bold mb-4 flex items-center justify-between">
-                    <span>Sentiment Breakdown</span>
-                    <i class="fa-solid fa-chart-pie text-gray-400"></i>
-                </h2>
-                <div class="relative h-64 flex items-center justify-center">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Sentiment Distribution Chart -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-400"></i> Sentiment Breakdown
+                    </h2>
+                </div>
+                <div class="relative h-72 flex justify-center items-center">
                     <canvas id="sentimentChart"></canvas>
                 </div>
             </div>
 
-            <!-- Rating Distribution -->
-            <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                <h2 class="text-base font-bold mb-4 flex items-center justify-between">
-                    <span>Rating Distribution</span>
-                    <i class="fa-solid fa-chart-bar text-gray-400"></i>
-                </h2>
-                <div class="relative h-64 flex items-center justify-center">
+            <!-- Rating Distribution Chart -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-bar text-indigo-400"></i> Rating Distribution
+                    </h2>
+                </div>
+                <div class="relative h-72">
                     <canvas id="ratingChart"></canvas>
                 </div>
             </div>
+        </div>
 
-            <!-- Keyword / Aspect Ratings -->
-            <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                <h2 class="text-base font-bold mb-4 flex items-center justify-between">
-                    <span>Aspect Ratings</span>
-                    <i class="fa-solid fa-chart-radar text-gray-400"></i>
+        <!-- Bottom Row: Hotel Comparison & Review List -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Hotel Comparison Chart (Takes 2 cols on lg) -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-indigo-400"></i> Hotel Ratings Comparison
+                    </h2>
+                </div>
+                <div class="relative h-80">
+                    <canvas id="hotelComparisonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Common Keywords / Topics -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg flex flex-col">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-tags text-indigo-400"></i> Top Keywords
                 </h2>
-                <div class="relative h-64 flex items-center justify-center">
-                    <canvas id="aspectChart"></canvas>
+                <div id="keywordsContainer" class="flex flex-wrap gap-2.5 overflow-y-auto max-h-80 pr-1">
+                    <!-- Dynamically populated tags -->
+                    <span class="text-slate-400 text-sm">Loading keywords...</span>
                 </div>
             </div>
         </div>
 
-        <!-- Filter & Search Toolbar -->
-        <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div class="w-full sm:w-72 relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <i class="fa-solid fa-search"></i>
-                </span>
-                <input type="text" id="searchInput" oninput="debounceSearch()" placeholder="Search reviews, hotels, keywords..." class="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <!-- Recent Reviews Table Section -->
+        <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-indigo-400"></i> Recent Reviews Feed
+                </h2>
+                <div class="w-full sm:w-72">
+                    <input type="text" id="searchReviewInput" onkeyup="filterReviewsTable()" placeholder="Search reviews..." class="w-full bg-slate-800 border border-darkborder text-slate-200 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
+                </div>
             </div>
-            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
-                <select id="sentimentFilter" onchange="loadReviews()" class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="">All Sentiments</option>
-                    <option value="Positive">Positive</option>
-                    <option value="Neutral">Neutral</option>
-                    <option value="Negative">Negative</option>
-                </select>
-                <select id="hotelFilter" onchange="loadReviews()" class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="">All Hotels</option>
-                </select>
-            </div>
-        </div>
 
-        <!-- Reviews Table / Cards Grid -->
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-                <h2 class="font-bold text-base">Recent Hotel Reviews</h2>
-                <span id="reviewCountBadge" class="text-xs font-semibold px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">0 reviews</span>
-            </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-200 dark:border-gray-800">
-                            <th class="py-3 px-6 font-semibold">Hotel / Location</th>
-                            <th class="py-3 px-6 font-semibold">Reviewer</th>
-                            <th class="py-3 px-6 font-semibold">Rating</th>
-                            <th class="py-3 px-6 font-semibold">Sentiment</th>
-                            <th class="py-3 px-6 font-semibold">Comment</th>
-                            <th class="py-3 px-6 font-semibold text-right">Actions</th>
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-800 text-slate-400 uppercase text-xs border-b border-darkborder">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Hotel</th>
+                            <th scope="col" class="px-6 py-3">Reviewer</th>
+                            <th scope="col" class="px-6 py-3">Rating</th>
+                            <th scope="col" class="px-6 py-3">Sentiment</th>
+                            <th scope="col" class="px-6 py-3">Review</th>
                         </tr>
                     </thead>
-                    <tbody id="reviewsTableBody" class="divide-y divide-gray-200 dark:divide-gray-800 text-sm">
-                        <!-- Populated by JS -->
+                    <tbody id="reviewsTableBody" class="divide-y divide-darkborder">
+                        <!-- Dynamically populated rows -->
                     </tbody>
                 </table>
             </div>
@@ -183,360 +185,284 @@
 
     </main>
 
-    <!-- Add / Edit Review Modal -->
-    <div id="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-        <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg p-6 border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
-                <h3 id="modalTitle" class="font-bold text-lg">Add New Hotel Review</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <form id="reviewForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-                <input type="hidden" id="reviewId">
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Hotel Name</label>
-                    <input type="text" id="hotelName" required placeholder="e.g. Grand Plaza Resort" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Reviewer Name</label>
-                        <input type="text" id="reviewerName" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Rating (1-5)</label>
-                        <input type="number" id="rating" min="1" max="5" required value="5" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Review Comment</label>
-                    <textarea id="comment" rows="4" required placeholder="Share details of your stay..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
-                </div>
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium transition">Save Review</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- Footer -->
+    <footer class="bg-cardbg border-t border-darkborder mt-12 py-6 text-center text-sm text-slate-400">
+        <p>&copy; 2025 HotelPulse Analytics. Built with FastAPI & Tailwind CSS.</p>
+    </footer>
 
-    <!-- JavaScript Logic -->
+    <!-- Frontend Logic Script -->
     <script>
+        let allReviewsData = [];
         let sentimentChartInstance = null;
         let ratingChartInstance = null;
-        let aspectChartInstance = null;
-        let searchTimer = null;
+        let hotelComparisonChartInstance = null;
 
-        // Theme Management
-        function toggleTheme() {
-            const html = document.documentElement;
-            const icon = document.getElementById('themeIcon');
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-                icon.className = 'fa-solid fa-sun text-lg';
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-                icon.className = 'fa-solid fa-moon text-lg';
-            }
-            updateChartThemes();
-        }
-
-        function initTheme() {
-            const saved = localStorage.getItem('theme');
-            const html = document.documentElement;
-            const icon = document.getElementById('themeIcon');
-            if (saved === 'light') {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-sun text-lg';
-            } else {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-moon text-lg';
-            }
-        }
-
-        function getChartColors() {
-            const isDark = document.documentElement.classList.contains('dark');
-            return {
-                textColor: isDark ? '#9ca3af' : '#4b5563',
-                gridColor: isDark ? '#374151' : '#e5e7eb'
-            };
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            initTheme();
-            fetchAllData();
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDashboardData();
+            document.getElementById('hotelFilter').addEventListener('change', (e) => {
+                filterAndRenderDashboard(e.target.value);
+            });
         });
 
-        async function fetchAllData() {
-            await Promise.all([
-                loadStats(),
-                loadHotelsList(),
-                loadReviews(),
-                loadCharts()
-            ]);
-        }
-
-        async function loadStats() {
+        async function fetchDashboardData() {
             try {
-                const res = await fetch('/api/stats');
-                const data = await res.json();
-                document.getElementById('statTotalReviews').innerText = data.total_reviews;
-                document.getElementById('statAvgRating').innerText = data.average_rating ? data.average_rating.toFixed(1) : '0.0';
-                document.getElementById('statPositiveSentiment').innerText = data.positive_percentage + '%';
-                document.getElementById('statNegativeSentiment').innerText = data.negative_percentage + '%';
-            } catch (err) {
-                console.error('Error loading stats:', err);
+                const response = await fetch('/api/reviews');
+                const data = await response.json();
+                allReviewsData = data.reviews;
+                populateHotelFilter(allReviewsData);
+                filterAndRenderDashboard('all');
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
             }
         }
 
-        async function loadHotelsList() {
-            try {
-                const res = await fetch('/api/hotels');
-                const hotels = await res.json();
-                const select = document.getElementById('hotelFilter');
-                const currentVal = select.value;
-                select.innerHTML = '<option value="">All Hotels</option>';
-                hotels.forEach(h => {
-                    const opt = document.createElement('option');
-                    opt.value = h;
-                    opt.innerText = h;
-                    select.appendChild(opt);
-                });
-                select.value = currentVal;
-            } catch (err) {
-                console.error('Error loading hotels:', err);
+        function populateHotelFilter(reviews) {
+            const hotelFilter = document.getElementById('hotelFilter');
+            const hotels = [...new Set(reviews.map(r => r.hotel_name))];
+            
+            // Keep 'all'
+            hotelFilter.innerHTML = '<option value="all">All Hotels</option>';
+            hotels.forEach(hotel => {
+                const opt = document.createElement('option');
+                opt.value = hotel;
+                opt.textContent = hotel;
+                hotelFilter.appendChild(opt);
+            });
+        }
+
+        function filterAndRenderDashboard(selectedHotel) {
+            let filtered = allReviewsData;
+            if (selectedHotel !== 'all') {
+                filtered = allReviewsData.filter(r => r.hotel_name === selectedHotel);
             }
+
+            updateKPIs(filtered);
+            renderSentimentChart(filtered);
+            renderRatingChart(filtered);
+            renderHotelComparisonChart(allReviewsData);
+            renderKeywords(filtered);
+            renderReviewsTable(filtered);
         }
 
-        async function loadReviews() {
-            const search = document.getElementById('searchInput').value;
-            const sentiment = document.getElementById('sentimentFilter').value;
-            const hotel = document.getElementById('hotelFilter').value;
+        function updateKPIs(reviews) {
+            const total = reviews.length;
+            const avgRating = total > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / total).toFixed(1) : 0;
+            const positiveCount = reviews.filter(r => r.sentiment.toLowerCase() === 'positive').length;
+            const negativeCount = reviews.filter(r => r.sentiment.toLowerCase() === 'negative').length;
 
-            let url = '/api/reviews?';
-            if (search) url += `search=${encodeURIComponent(search)}&`;
-            if (sentiment) url += `sentiment=${encodeURIComponent(sentiment)}&`;
-            if (hotel) url += `hotel_name=${encodeURIComponent(hotel)}&`;
+            const posPercent = total > 0 ? Math.round((positiveCount / total) * 100) : 0;
+            const negPercent = total > 0 ? Math.round((negativeCount / total) * 100) : 0;
 
-            try {
-                const res = await fetch(url);
-                const reviews = await res.json();
-                const tbody = document.getElementById('reviewsTableBody');
-                tbody.innerHTML = '';
-                document.getElementById('reviewCountBadge').innerText = `${reviews.length} reviews`;
-
-                if (reviews.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400">No reviews found matching your criteria.</td></tr>`;
-                    return;
-                }
-
-                reviews.forEach(r => {
-                    let sentimentBadge = '';
-                    if (r.sentiment === 'Positive') {
-                        sentimentBadge = '<span class="px-2.5 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full">Positive</span>';
-                    } else if (r.sentiment === 'Negative') {
-                        sentimentBadge = '<span class="px-2.5 py-1 text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 rounded-full">Negative</span>';
-                    } else {
-                        sentimentBadge = '<span class="px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 rounded-full">Neutral</span>';
-                    }
-
-                    let stars = '';
-                    for (let i = 1; i <= 5; i++) {
-                        stars += `<i class="fa-solid fa-star ${i <= r.rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-700'}"></i>`;
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition';
-                    tr.innerHTML = `
-                        <td class="py-3 px-6 font-medium">${r.hotel_name}</td>
-                        <td class="py-3 px-6 text-gray-600 dark:text-gray-400">${r.reviewer_name}</td>
-                        <td class="py-3 px-6">
-                            <div class="flex items-center space-x-1">${stars}</div>
-                        </td>
-                        <td class="py-3 px-6">${sentimentBadge}</td>
-                        <td class="py-3 px-6 text-gray-600 dark:text-gray-400 max-w-xs truncate" title="${r.comment}">${r.comment}</td>
-                        <td class="py-3 px-6 text-right space-x-2">
-                            <button onclick="openEditModal('${r.id}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="deleteReview('${r.id}')" class="text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300" title="Delete"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error('Error loading reviews:', err);
-            }
+            document.getElementById('kpiTotalReviews').textContent = total;
+            document.getElementById('kpiAvgRating').textContent = avgRating + ' / 5';
+            document.getElementById('kpiPositiveSentiment').textContent = posPercent + '%';
+            document.getElementById('kpiNegativeSentiment').textContent = negPercent + '%';
         }
 
-        async function loadCharts() {
-            try {
-                const res = await fetch('/api/analytics/charts');
-                const data = await res.json();
-                const colors = getChartColors();
-
-                // Sentiment Breakdown Chart
-                const ctxSentiment = document.getElementById('sentimentChart').getContext('2d');
-                if (sentimentChartInstance) sentimentChartInstance.destroy();
-                sentimentChartInstance = new Chart(ctxSentiment, {
-                    type: 'doughnut',
-                    data: {
-                        labels: data.sentiment_breakdown.labels,
-                        datasets: [{
-                            data: data.sentiment_breakdown.counts,
-                            backgroundColor: ['#22c55e', '#94a3b8', '#f43f5e'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { color: colors.textColor } }
-                        }
-                    }
-                });
-
-                // Rating Distribution Chart
-                const ctxRating = document.getElementById('ratingChart').getContext('2d');
-                if (ratingChartInstance) ratingChartInstance.destroy();
-                ratingChartInstance = new Chart(ctxRating, {
-                    type: 'bar',
-                    data: {
-                        labels: data.rating_distribution.labels,
-                        datasets: [{
-                            label: 'Reviews',
-                            data: data.rating_distribution.counts,
-                            backgroundColor: '#3b82f6',
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            x: { grid: { display: false }, ticks: { color: colors.textColor } },
-                            y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, precision: 0 } }
-                        }
-                    }
-                });
-
-                // Aspect Ratings Chart
-                const ctxAspect = document.getElementById('aspectChart').getContext('2d');
-                if (aspectChartInstance) aspectChartInstance.destroy();
-                aspectChartInstance = new Chart(ctxAspect, {
-                    type: 'bar',
-                    data: {
-                        labels: data.aspect_ratings.labels,
-                        datasets: [{
-                            label: 'Avg Score',
-                            data: data.aspect_ratings.scores,
-                            backgroundColor: '#10b981',
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            x: { max: 5, grid: { color: colors.gridColor }, ticks: { color: colors.textColor } },
-                            y: { grid: { display: false }, ticks: { color: colors.textColor } }
-                        }
-                    }
-                });
-            } catch (err) {
-                console.error('Error loading charts:', err);
-            }
-        }
-
-        function updateChartThemes() {
-            loadCharts();
-        }
-
-        function debounceSearch() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => {
-                loadReviews();
-            }, 300);
-        }
-
-        // Modal operations
-        function openAddModal() {
-            document.getElementById('modalTitle').innerText = 'Add New Hotel Review';
-            document.getElementById('reviewForm').reset();
-            document.getElementById('reviewId').value = '';
-            document.getElementById('reviewModal').classList.remove('hidden');
-        }
-
-        async function openEditModal(id) {
-            try {
-                const res = await fetch(`/api/reviews/${id}`);
-                const r = await res.json();
-                document.getElementById('modalTitle').innerText = 'Edit Hotel Review';
-                document.getElementById('reviewId').value = r.id;
-                document.getElementById('hotelName').value = r.hotel_name;
-                document.getElementById('reviewerName').value = r.reviewer_name;
-                document.getElementById('rating').value = r.rating;
-                document.getElementById('comment').value = r.comment;
-                document.getElementById('reviewModal').classList.remove('hidden');
-            } catch (err) {
-                console.error('Error fetching review for edit:', err);
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('reviewModal').classList.add('hidden');
-        }
-
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            const id = document.getElementById('reviewId').value;
-            const payload = {
-                hotel_name: document.getElementById('hotelName').value,
-                reviewer_name: document.getElementById('reviewerName').value,
-                rating: parseInt(document.getElementById('rating').value),
-                comment: document.getElementById('comment').value
+        function renderSentimentChart(reviews) {
+            const counts = {
+                Positive: reviews.filter(r => r.sentiment.toLowerCase() === 'positive').length,
+                Neutral: reviews.filter(r => r.sentiment.toLowerCase() === 'neutral').length,
+                Negative: reviews.filter(r => r.sentiment.toLowerCase() === 'negative').length
             };
 
-            const url = id ? `/api/reviews/${id}` : '/api/reviews';
-            const method = id ? 'PUT' : 'POST';
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            if (sentimentChartInstance) sentimentChartInstance.destroy();
 
-            try {
-                const res = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    closeModal();
-                    fetchAllData();
-                } else {
-                    alert('Failed to save review');
+            sentimentChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [counts.Positive, counts.Neutral, counts.Negative],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#cbd5e1', font: { family: 'inherit' } }
+                        }
+                    },
+                    cutout: '70%'
                 }
-            } catch (err) {
-                console.error('Error saving review:', err);
-            }
+            });
         }
 
-        async function deleteReview(id) {
-            if (!confirm('Are you sure you want to delete this review?')) return;
-            try {
-                const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    fetchAllData();
-                } else {
-                    alert('Failed to delete review');
+        function renderRatingChart(reviews) {
+            const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            reviews.forEach(r => {
+                if (ratingCounts[r.rating] !== undefined) {
+                    ratingCounts[r.rating]++;
                 }
-            } catch (err) {
-                console.error('Error deleting review:', err);
+            });
+
+            const ctx = document.getElementById('ratingChart').getContext('2d');
+            if (ratingChartInstance) ratingChartInstance.destroy();
+
+            ratingChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [ratingCounts[1], ratingCounts[2], ratingCounts[3], ratingCounts[4], ratingCounts[5]],
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHotelComparisonChart(reviews) {
+            const hotelMap = {};
+            reviews.forEach(r => {
+                if (!hotelMap[r.hotel_name]) {
+                    hotelMap[r.hotel_name] = { totalRating: 0, count: 0 };
+                }
+                hotelMap[r.hotel_name].totalRating += r.rating;
+                hotelMap[r.hotel_name].count += 1;
+            });
+
+            const hotelNames = Object.keys(hotelMap);
+            const avgRatings = hotelNames.map(h => (hotelMap[h].totalRating / hotelMap[h].count).toFixed(1));
+
+            const ctx = document.getElementById('hotelComparisonChart').getContext('2d');
+            if (hotelComparisonChartInstance) hotelComparisonChartInstance.destroy();
+
+            hotelComparisonChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: hotelNames,
+                    datasets: [{
+                        label: 'Avg Rating',
+                        data: avgRatings,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 5,
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderKeywords(reviews) {
+            const container = document.getElementById('keywordsContainer');
+            container.innerHTML = '';
+
+            // Simple keyword frequency generator from review comments
+            const stopWords = new Set(['the', 'and', 'a', 'to', 'of', 'in', 'is', 'it', 'was', 'i', 'for', 'with', 'hotel', 'my', 'at', 'this', 'on', 'room']);
+            const wordCounts = {};
+
+            reviews.forEach(r => {
+                const words = r.review_text.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/);
+                words.forEach(w => {
+                    if (w.length > 2 && !stopWords.has(w)) {
+                        wordCounts[w] = (wordCounts[w] || 0) + 1;
+                    }
+                });
+            });
+
+            const sortedWords = Object.entries(wordCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 15);
+
+            if (sortedWords.length === 0) {
+                container.innerHTML = '<span class="text-slate-400 text-sm">No keywords available.</span>';
+                return;
             }
+
+            sortedWords.forEach(([word, count]) => {
+                const tag = document.createElement('span');
+                tag.className = 'bg-slate-800 text-indigo-300 border border-darkborder text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium';
+                tag.innerHTML = `<span>#${word}</span> <span class="bg-indigo-900/60 text-indigo-200 px-1.5 py-0.5 rounded text-[10px]">${count}</span>`;
+                container.appendChild(tag);
+            });
+        }
+
+        function renderReviewsTable(reviews) {
+            const tbody = document.getElementById('reviewsTableBody');
+            tbody.innerHTML = '';
+
+            if (reviews.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-slate-400">No reviews found.</td></tr>`;
+                return;
+            }
+
+            reviews.forEach(r => {
+                let sentimentBadge = '';
+                const s = r.sentiment.toLowerCase();
+                if (s === 'positive') {
+                    sentimentBadge = '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full text-xs font-semibold">Positive</span>';
+                } else if (s === 'negative') {
+                    sentimentBadge = '<span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-full text-xs font-semibold">Negative</span>';
+                } else {
+                    sentimentBadge = '<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full text-xs font-semibold">Neutral</span>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/50 transition';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-white">${r.hotel_name}</td>
+                    <td class="px-6 py-4 text-slate-300">${r.reviewer_name}</td>
+                    <td class="px-6 py-4 text-amber-400 font-bold">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</td>
+                    <td class="px-6 py-4">${sentimentBadge}</td>
+                    <td class="px-6 py-4 text-slate-300 max-w-xs truncate" title="${r.review_text}">${r.review_text}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterReviewsTable() {
+            const query = document.getElementById('searchReviewInput').value.toLowerCase();
+            const filtered = allReviewsData.filter(r => 
+                r.hotel_name.toLowerCase().includes(query) ||
+                r.reviewer_name.toLowerCase().includes(query) ||
+                r.review_text.toLowerCase().includes(query) ||
+                r.sentiment.toLowerCase().includes(query)
+            );
+            renderReviewsTable(filtered);
         }
     </script>
 </body>
