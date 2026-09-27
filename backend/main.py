@@ -1,158 +1,61 @@
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 import os
-from pydantic import BaseModel
-from typing import List, Optional
 
-app = FastAPI(
-    title="Hotel Review Visualization and Analysis Dashboard",
-    description="Backend API for hotel reviews sentiment and rating analysis",
-    version="1.0.0"
-)
+app = FastAPI(title="Hotel Review Visualization and Analysis Dashboard")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Mock dataset for Hotel Reviews
+# Mock dataset for hotel reviews
 MOCK_REVIEWS = [
-    {
-        "id": 1,
-        "author": "Sarah Jenkins",
-        "rating": 5,
-        "sentiment": "positive",
-        "text": "Absolute gem of a hotel! The staff went above and beyond to make our anniversary special. Sparkling clean rooms and fantastic breakfast.",
-        "date": "2025-02-18"
-    },
-    {
-        "id": 2,
-        "author": "Michael Chang",
-        "rating": 2,
-        "sentiment": "negative",
-        "text": "Very disappointing stay. The AC unit was extremely loud all night and the front desk staff was indifferent to our complaints.",
-        "date": "2025-02-17"
-    },
-    {
-        "id": 3,
-        "author": "Elena Rostova",
-        "rating": 4,
-        "sentiment": "positive",
-        "text": "Great location right in the city center. Walkable to all major attractions. Room was slightly small but very cozy.",
-        "date": "2025-02-15"
-    },
-    {
-        "id": 4,
-        "author": "David Smith",
-        "rating": 3,
-        "sentiment": "neutral",
-        "text": "Average experience overall. The pool was closed for maintenance which was a bummer, but the restaurant had good food.",
-        "date": "2025-02-14"
-    },
-    {
-        "id": 5,
-        "author": "Jessica Taylor",
-        "rating": 5,
-        "sentiment": "positive",
-        "text": "Breathtaking ocean views and world-class spa facilities. Can't wait to come back for our next vacation!",
-        "date": "2025-02-12"
-    },
-    {
-        "id": 6,
-        "author": "Robert Downey",
-        "rating": 1,
-        "sentiment": "negative",
-        "text": "Terrible customer service and found hair in the bathroom upon arrival. Will not be recommending to anyone.",
-        "date": "2025-02-10"
-    },
-    {
-        "id": 7,
-        "author": "Amanda White",
-        "rating": 4,
-        "sentiment": "positive",
-        "text": "Very comfortable beds and quiet rooms. Excellent choice for business travelers looking for reliable Wi-Fi and workspace.",
-        "date": "2025-02-09"
-    },
-    {
-        "id": 8,
-        "author": "Carlos Santana",
-        "rating": 3,
-        "sentiment": "neutral",
-        "text": "Decent hotel for the price point. Breakfast buffet could use more variety, but room cleanliness was satisfactory.",
-        "date": "2025-02-08"
-    },
-    {
-        "id": 9,
-        "author": "Emily Blunt",
-        "rating": 5,
-        "sentiment": "positive",
-        "text": "Immaculate design, friendly concierge, and delicious cocktails at the rooftop bar. 10/10 stay!",
-        "date": "2025-02-05"
-    },
-    {
-        "id": 10,
-        "author": "Liam Neeson",
-        "rating": 2,
-        "sentiment": "negative",
-        "text": "Room was much smaller than pictured online and hallway noise kept waking us up.",
-        "date": "2025-02-03"
-    }
+    {"id": 1, "hotel_name": "Grand Plaza", "reviewer_name": "Alice Smith", "rating": 5, "comment": "Exceptional service and wonderful rooms! Truly enjoyed our stay.", "sentiment": "Positive"},
+    {"id": 2, "hotel_name": "Ocean Breeze", "reviewer_name": "Bob Jones", "rating": 2, "comment": "The room was dirty and the staff was extremely unhelpful.", "sentiment": "Negative"},
+    {"id": 3, "hotel_name": "Mountain View", "reviewer_name": "Charlie Brown", "rating": 4, "comment": "Great location and nice views, but breakfast was mediocre.", "sentiment": "Neutral"},
+    {"id": 4, "hotel_name": "Grand Plaza", "reviewer_name": "Diana Prince", "rating": 5, "comment": "Luxury at its finest. Will definitely come back again.", "sentiment": "Positive"},
+    {"id": 5, "hotel_name": "City Express", "reviewer_name": "Evan Wright", "rating": 3, "comment": "Average hotel. Good for a quick overnight stay.", "sentiment": "Neutral"},
+    {"id": 6, "hotel_name": "Ocean Breeze", "reviewer_name": "Fiona Gallagher", "rating": 1, "comment": "Terrible experience. Loud noise all night long.", "sentiment": "Negative"},
+    {"id": 7, "hotel_name": "Mountain View", "reviewer_name": "George Clark", "rating": 5, "comment": "Breathtaking scenery and immaculate hospitality.", "sentiment": "Positive"}
 ]
 
-class Review(BaseModel):
-    id: int
-    author: str
-    rating: int
-    sentiment: str
-    text: str
-    date: str
-
-@app.get("/api/health")
-def health_check():
-    return {"status": "healthy", "message": "Hotel Review Dashboard API is running"}
-
-@app.get("/api/reviews")
-def get_reviews(sentiment: Optional[str] = Query(None, description="Filter by sentiment: positive, neutral, negative")):
-    filtered = MOCK_REVIEWS
-    if sentiment and sentiment.lower() != "all":
-        filtered = [r for r in MOCK_REVIEWS if r["sentiment"] == sentiment.lower()]
-
-    # Calculate statistics
+@app.get("/api/dashboard")
+def get_dashboard_data():
     total_reviews = len(MOCK_REVIEWS)
-    average_rating = sum(r["rating"] for r in MOCK_REVIEWS) / total_reviews if total_reviews > 0 else 0
+    avg_rating = sum(r["rating"] for r in MOCK_REVIEWS) / total_reviews if total_reviews > 0 else 0
     
-    sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
-    rating_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    sentiments = [r["sentiment"] for r in MOCK_REVIEWS]
+    pos_count = sentiments.count("Positive")
+    neg_count = sentiments.count("Negative")
+    neu_count = sentiments.count("Neutral")
+    
+    positive_percentage = round((pos_count / total_reviews) * 100, 1) if total_reviews > 0 else 0
+    negative_percentage = round((neg_count / total_reviews) * 100, 1) if total_reviews > 0 else 0
 
-    for r in MOCK_REVIEWS:
-        s = r["sentiment"]
-        if s in sentiment_counts:
-            sentiment_counts[s] += 1
-        rt = r["rating"]
-        if rt in rating_counts:
-            rating_counts[rt] += 1
+    rating_distribution = {
+        "1 Star": sum(1 for r in MOCK_REVIEWS if r["rating"] == 1),
+        "2 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 2),
+        "3 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 3),
+        "4 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 4),
+        "5 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 5),
+    }
 
-    stats = {
-        "total_reviews": total_reviews,
-        "average_rating": round(average_rating, 2),
-        "sentiment_counts": sentiment_counts,
-        "rating_counts": rating_counts
+    sentiment_distribution = {
+        "Positive": pos_count,
+        "Negative": neg_count,
+        "Neutral": neu_count
     }
 
     return {
-        "stats": stats,
-        "reviews": filtered
+        "total_reviews": total_reviews,
+        "avg_rating": avg_rating,
+        "positive_percentage": positive_percentage,
+        "negative_percentage": negative_percentage,
+        "rating_distribution": rating_distribution,
+        "sentiment_distribution": sentiment_distribution,
+        "recent_reviews": MOCK_REVIEWS[::-1]
     }
 
-# Serve frontend index.html at root if frontend file exists
 @app.get("/")
 def serve_index():
     index_path = os.path.join("frontend", "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    return {"message": "Welcome to Hotel Review Analysis API. Frontend index.html not found in container root."}
+    return HTMLResponse("<h1>Frontend index.html not found</h1>", status_code=404)
