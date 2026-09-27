@@ -2,24 +2,19 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
+    container_name: hotel_review_backend
     ports:
       - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    restart: always
 
   frontend:
     image: nginx:alpine
+    container_name: hotel_review_frontend
     ports:
-      - "3000:80"
+      - "80:80"
     volumes:
-      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend:/usr/share/nginx/html
     depends_on:
       - backend
+    restart: always

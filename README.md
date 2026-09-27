@@ -1,57 +1,35 @@
 # Hotel Review Visualization and Analysis Dashboard
 
-A modern, production-grade Hotel Review Intelligence and Aspect Sentiment Dashboard built with **FastAPI** and a responsive **Tailwind CSS + Chart.js** frontend.
+A full-stack web application built with FastAPI, Tailwind CSS, and Chart.js designed to monitor, analyze, and visualize hotel guest reviews and sentiment data.
 
-## Features
+## Project Architecture
+- **Backend**: FastAPI (Python 3.10+) with automatic sentiment classification, analytics aggregation, and Pytest test suite.
+- **Frontend**: Responsive Tailwind CSS dashboard equipped with Chart.js analytics visualizations.
+- **Orchestration**: Docker Compose running backend FastAPI service and Nginx frontend service.
 
-- **Comprehensive Aspect Sentiment Analysis**: Breaks down guest ratings across six crucial operational pillars: *Cleanliness, Staff & Service, Location, Value for Money, Amenities/Wi-Fi, and Food & Dining*.
-- **Industry Benchmark Radar**: Compare property aspect ratings against hospitality standards in real-time.
-- **Trend & Sentiment Tracking**: Dual-axis monthly historical tracking of star ratings and synthesized sentiment score (-1 to +1).
-- **Topic & Keyword Mining**: Automatically pulls frequent sentiment-tagged topics from qualitative review texts.
-- **Filtering & Search**: Live property filtering, sentiment classification (Positive / Neutral / Negative), and instant keyword searching.
-- **Submit Reviews**: Dynamic submission modal with multi-aspect sliders and automated sentiment categorization.
+## Quick Start with Docker Compose
+Ensure you have Docker and Docker Compose installed on your machine.
 
----
+1. Run the multi-container stack:
+   ```bash
+   docker-compose up --build
+   ```
+2. Access the Dashboard:
+   - Frontend UI: `http://localhost`
+   - Backend API Docs (Swagger): `http://localhost:8000/docs`
 
-## Quickstart with Docker Compose
+## Running Locally Without Docker
 
-Ensure Docker and Docker Compose are installed, then run:
-
-```bash
-docker-compose up --build
-```
-
-- **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
-- **Backend API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Backend Health Check**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
-
----
-
-## Local Development Setup
-
-### 1. Backend (FastAPI)
+### 1. Backend Setup
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
-
-### 2. Frontend
-Serve the `frontend` folder with any web server (or open `frontend/index.html` directly in modern browsers):
+Run unit tests:
 ```bash
-cd frontend
-python3 -m http.server 3000
+pytest
 ```
-Navigate to `http://localhost:3000`.
 
----
-
-## Running Automated Tests
-
-Run the test suite using pytest:
-```bash
-cd backend
-pytest test_api.py -v
-```
+### 2. Frontend Setup
+Serve the `frontend/index.html` file using any static file server or open it directly in your web browser (ensure the backend is active at `http://localhost:8000`).
