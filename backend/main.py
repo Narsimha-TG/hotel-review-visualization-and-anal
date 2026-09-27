@@ -1,66 +1,115 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from typing import List
 import os
 
 app = FastAPI(title="Hotel Review Visualization and Analysis Dashboard")
 
-# Mock dataset for hotel reviews
-MOCK_REVIEWS = [
-    {"id": 1, "hotel_name": "Grand Plaza", "reviewer_name": "Alice Smith", "rating": 5, "comment": "Exceptional service and wonderful rooms! Truly enjoyed our stay.", "sentiment": "Positive"},
-    {"id": 2, "hotel_name": "Ocean Breeze", "reviewer_name": "Bob Jones", "rating": 2, "comment": "The room was dirty and the staff was extremely unhelpful.", "sentiment": "Negative"},
-    {"id": 3, "hotel_name": "Mountain View", "reviewer_name": "Charlie Brown", "rating": 4, "comment": "Great location and nice views, but breakfast was mediocre.", "sentiment": "Neutral"},
-    {"id": 4, "hotel_name": "Grand Plaza", "reviewer_name": "Diana Prince", "rating": 5, "comment": "Luxury at its finest. Will definitely come back again.", "sentiment": "Positive"},
-    {"id": 5, "hotel_name": "City Express", "reviewer_name": "Evan Wright", "rating": 3, "comment": "Average hotel. Good for a quick overnight stay.", "sentiment": "Neutral"},
-    {"id": 6, "hotel_name": "Ocean Breeze", "reviewer_name": "Fiona Gallagher", "rating": 1, "comment": "Terrible experience. Loud noise all night long.", "sentiment": "Negative"},
-    {"id": 7, "hotel_name": "Mountain View", "reviewer_name": "George Clark", "rating": 5, "comment": "Breathtaking scenery and immaculate hospitality.", "sentiment": "Positive"}
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class Review(BaseModel):
+    id: int = None
+    hotel_name: str
+    rating: int
+    review_text: str
+    sentiment: str = None
+
+class ReviewCreate(BaseModel):
+    hotel_name: str
+    rating: int
+    review_text: str
+
+# In-memory database with sample data
+reviews_db = [
+    {"id": 1, "hotel_name": "Grand Plaza", "rating": 5, "review_text": "Fantastic service and stunning ocean views! Highly recommend.", "sentiment": "Positive"},
+    {"id": 2, "hotel_name": "City Express", "rating": 2, "review_text": "Noisy rooms and poor room service. Will not stay again.", "sentiment": "Negative"},
+    {"id": 3, "hotel_name": "Sunset Resort", "rating": 4, "review_text": "Great pool area and delicious breakfast options.", "sentiment": "Positive"},
+    {"id": 4, "hotel_name": "Urban Hub", "rating": 3, "review_text": "Average stay, clean rooms but location is a bit far from downtown.", "sentiment": "Neutral"},
+    {"id": 5, "hotel_name": "Grand Plaza", "rating": 1, "review_text": "Terrible experience, AC was broken and staff was rude.", "sentiment": "Negative"}
 ]
 
-@app.get("/api/dashboard")
-def get_dashboard_data():
-    total_reviews = len(MOCK_REVIEWS)
-    avg_rating = sum(r["rating"] for r in MOCK_REVIEWS) / total_reviews if total_reviews > 0 else 0
+def analyze_sentiment(rating: int, text: str) -> str:
+    text_lower = text.lower()
+    positive_keywords = ["fantastic", "recommend", "great", "delicious", "wonderful", "amazing", "excellent"]
+    negative_keywords = ["poor", "terrible", "noisy", "broken", "rude", "bad", "worst"]
     
-    sentiments = [r["sentiment"] for r in MOCK_REVIEWS]
-    pos_count = sentiments.count("Positive")
-    neg_count = sentiments.count("Negative")
-    neu_count = sentiments.count("Neutral")
+    pos_score = sum(1 for word in positive_keywords if word in text_lower)
+    neg_score = sum(1 for word in negative_keywords if word in text_lower)
     
-    positive_percentage = round((pos_count / total_reviews) * 100, 1) if total_reviews > 0 else 0
-    negative_percentage = round((neg_count / total_reviews) * 100, 1) if total_reviews > 0 else 0
+    if rating >= 4 or pos_score > neg_score:
+        return "Positive"
+    elif rating <= 2 or neg_score > pos_score:
+        return "Negative"
+    else:
+        return "Neutral"
 
-    rating_distribution = {
-        "1 Star": sum(1 for r in MOCK_REVIEWS if r["rating"] == 1),
-        "2 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 2),
-        "3 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 3),
-        "4 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 4),
-        "5 Stars": sum(1 for r in MOCK_REVIEWS if r["rating"] == 5),
+@app.get("/api/reviews", response_model=List[Review])
+def get_reviews():
+    return reviews_db
+
+@app.post("/api/reviews", response_model=Review)
+def create_review(review_in: ReviewCreate):
+    new_id = max([r["id"] for r in reviews_db], default=0) + 1
+    sentiment = analyze_sentiment(review_in.rating, review_in.review_text)
+    new_review = {
+        "id": new_id,
+        "hotel_name": review_in.hotel_name,
+        "rating": review_in.rating,
+        "review_text": review_in.review_text,
+        "sentiment": sentiment
     }
+    reviews_db.insert(0, new_review)
+    return new_review
 
-    sentiment_distribution = {
-        "Positive": pos_count,
-        "Negative": neg_count,
-        "Neutral": neu_count
+@app.get("/api/dashboard")
+def get_dashboard_stats():
+    total_reviews = len(reviews_db)
+    if total_reviews > 0:
+        avg_rating = sum(r["rating"] for r in reviews_db) / total_reviews
+    else:
+        avg_rating = 0.0
+
+    positive_count = sum(1 for r in reviews_db if r["sentiment"] == "Positive")
+    neutral_count = sum(1 for r in reviews_db if r["sentiment"] == "Neutral")
+    negative_count = sum(1 for r in reviews_db if r["sentiment"] == "Negative")
+
+    rating_1 = sum(1 for r in reviews_db if r["rating"] == 1)
+    rating_2 = sum(1 for r in reviews_db if r["rating"] == 2)
+    rating_3 = sum(1 for r in reviews_db if r["rating"] == 3)
+    rating_4 = sum(1 for r in reviews_db if r["rating"] == 4)
+    rating_5 = sum(1 for r in reviews_db if r["rating"] == 5)
+
+    stats = {
+        "total_reviews": total_reviews,
+        "avg_rating": avg_rating,
+        "positive_count": positive_count,
+        "neutral_count": neutral_count,
+        "negative_count": negative_count,
+        "rating_1": rating_1,
+        "rating_2": rating_2,
+        "rating_3": rating_3,
+        "rating_4": rating_4,
+        "rating_5": rating_5,
     }
 
     return {
-        "total_reviews": total_reviews,
-        "avg_rating": avg_rating,
-        "positive_percentage": positive_percentage,
-        "negative_percentage": negative_percentage,
-        "rating_distribution": rating_distribution,
-        "sentiment_distribution": sentiment_distribution,
-        "recent_reviews": MOCK_REVIEWS[::-1]
+        "stats": stats,
+        "reviews": reviews_db
     }
-
-@app.get("/api/reviews")
-def get_reviews():
-    """Returns the review list for test_api.py and client frontend"""
-    return MOCK_REVIEWS
 
 @app.get("/")
 def serve_index():
-    index_path = os.path.join("frontend", "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return HTMLResponse("<h1>Frontend index.html not found</h1>", status_code=404)
+    frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/index.html"))
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path)
+    return {"message": "Frontend index.html not found"}

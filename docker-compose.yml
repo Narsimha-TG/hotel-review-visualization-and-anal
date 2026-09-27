@@ -1,12 +1,8 @@
 version: '3.8'
+
 services:
   backend:
     build: ./backend
     ports:
       - "8000:8000"
-  frontend:
-    image: nginx:alpine
-    volumes:
-      - ./frontend:/usr/share/nginx/html
-    ports:
-      - "8080:80"
+    restart: always
