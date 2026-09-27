@@ -6,13 +6,3 @@ services:
     ports:
       - "8000:8000"
     restart: always
-
-  frontend:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./frontend/index.html:/usr/share/nginx/html/index.html
-    depends_on:
-      - backend
-    restart: always
