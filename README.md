@@ -1,47 +1,33 @@
 # Hotel Review Visualization and Analysis Dashboard
 
-A production-ready full-stack application featuring a FastAPI backend with automated sentiment analysis, analytics aggregations, test suites, and a responsive Tailwind CSS dashboard with Chart.js visualizations.
+A modern full-stack application for capturing, visualizing, and analyzing hotel customer reviews with automated sentiment classification.
 
 ## Project Structure
 
-- `backend/`: FastAPI application, dependencies, Dockerfile, and pytest suite.
-- `frontend/`: Modern Tailwind CSS responsive dashboard.
-- `docker-compose.yml`: Multi-container orchestration configuration.
+- `backend/`: FastAPI Python application with automated tests and Dockerfile.
+- `frontend/`: Responsive Tailwind CSS single-page dashboard utilizing Chart.js.
+- `docker-compose.yml`: Multi-container orchestration specification.
 
----
+## Quick Start with Docker
 
-## Quick Start with Docker Compose
-
-Make sure you have Docker and Docker Compose installed.
+Ensure you have Docker and Docker Compose installed:
 
 ```bash
 docker-compose up --build
 ```
 
 The backend API will be available at `http://localhost:8000`.
-Interactive API documentation (Swagger UI) is available at `http://localhost:8000/docs`.
 
----
+## Running the Frontend
 
-## Running Locally Without Docker
+Open `frontend/index.html` directly in any web browser or serve via a local static server (e.g., `npx serve frontend`).
 
-### 1. Backend Setup
+## Running Backend Tests
+
+Navigate to the `backend/` directory and execute pytest:
 
 ```bash
 cd backend
 pip install -r requirements.txt
-
-# Run API server
-uvicorn main:app --reload --port 8000
+pytest -v
 ```
-
-### 2. Running Tests
-
-```bash
-cd backend
-pytest
-```
-
-### 3. Frontend Setup
-
-Simply open `frontend/index.html` in your web browser or serve it via a static file server (e.g. `npx serve frontend`).

@@ -1,115 +1,122 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import List
+import pandas as pd
+import io
 import os
 
 app = FastAPI(title="Hotel Review Visualization and Analysis Dashboard")
 
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# In-memory storage with default mock data
+DEFAULT_DATA = [
+    {"hotel_name": "Grand Plaza", "reviewer_name": "Alice Smith", "rating": 5, "sentiment": "Positive", "comment": "Amazing service and gorgeous rooms!"},
+    {"hotel_name": "Grand Plaza", "reviewer_name": "Bob Jones", "rating": 4, "sentiment": "Positive", "comment": "Very clean, friendly staff."},
+    {"hotel_name": "Seaside Resort", "reviewer_name": "Charlie Brown", "rating": 2, "sentiment": "Negative", "comment": "Noisy rooms and poor breakfast selection."},
+    {"hotel_name": "Seaside Resort", "reviewer_name": "Diana Prince", "rating": 3, "sentiment": "Neutral", "comment": "Average stay, nothing special."},
+    {"hotel_name": "Mountain Lodge", "reviewer_name": "Evan Wright", "rating": 5, "sentiment": "Positive", "comment": "Breathtaking views and cozy atmosphere."},
+    {"hotel_name": "Urban Inn", "reviewer_name": "Fiona Gallagher", "rating": 1, "sentiment": "Negative", "comment": "Terrible hygiene and rude receptionist."}
+];
 
-class Review(BaseModel):
-    id: int = None
-    hotel_name: str
-    rating: int
-    review_text: str
-    sentiment: str = None
+df_reviews = pd.DataFrame(DEFAULT_DATA)
 
-class ReviewCreate(BaseModel):
-    hotel_name: str
-    rating: int
-    review_text: str
+def compute_analytics(df: pd.DataFrame):
+    if df.empty:
+        return {
+            "total_reviews": 0,
+            "avg_rating": 0.0,
+            "positive_percentage": 0.0,
+            "negative_percentage": 0.0,
+            "sentiment_counts": {},
+            "rating_counts": {},
+            "hotel_avg_ratings": {},
+            "recent_reviews": []
+        }
 
-# In-memory database with sample data
-reviews_db = [
-    {"id": 1, "hotel_name": "Grand Plaza", "rating": 5, "review_text": "Fantastic service and stunning ocean views! Highly recommend.", "sentiment": "Positive"},
-    {"id": 2, "hotel_name": "City Express", "rating": 2, "review_text": "Noisy rooms and poor room service. Will not stay again.", "sentiment": "Negative"},
-    {"id": 3, "hotel_name": "Sunset Resort", "rating": 4, "review_text": "Great pool area and delicious breakfast options.", "sentiment": "Positive"},
-    {"id": 4, "hotel_name": "Urban Hub", "rating": 3, "review_text": "Average stay, clean rooms but location is a bit far from downtown.", "sentiment": "Neutral"},
-    {"id": 5, "hotel_name": "Grand Plaza", "rating": 1, "review_text": "Terrible experience, AC was broken and staff was rude.", "sentiment": "Negative"}
-]
-
-def analyze_sentiment(rating: int, text: str) -> str:
-    text_lower = text.lower()
-    positive_keywords = ["fantastic", "recommend", "great", "delicious", "wonderful", "amazing", "excellent"]
-    negative_keywords = ["poor", "terrible", "noisy", "broken", "rude", "bad", "worst"]
+    total_reviews = len(df)
+    avg_rating = float(df["rating"].mean()) if "rating" in df.columns else 0.0
     
-    pos_score = sum(1 for word in positive_keywords if word in text_lower)
-    neg_score = sum(1 for word in negative_keywords if word in text_lower)
-    
-    if rating >= 4 or pos_score > neg_score:
-        return "Positive"
-    elif rating <= 2 or neg_score > pos_score:
-        return "Negative"
-    else:
-        return "Neutral"
+    # Sentiment calculations
+    sentiment_counts = df["sentiment"].value_counts().to_dict() if "sentiment" in df.columns else {}
+    positive_count = sentiment_counts.get("Positive", 0)
+    negative_count = sentiment_counts.get("Negative", 0)
+    positive_percentage = (positive_count / total_reviews) * 100 if total_reviews > 0 else 0.0
+    negative_percentage = (negative_count / total_reviews) * 100 if total_reviews > 0 else 0.0
 
-@app.get("/api/reviews", response_model=List[Review])
-def get_reviews():
-    return reviews_db
+    # Rating distribution
+    rating_counts = df["rating"].value_counts().sort_index().to_dict() if "rating" in df.columns else {}
+    # Convert keys to string for JSON consistency
+    rating_counts = {str(k): v for k, v in rating_counts.items()}
 
-@app.post("/api/reviews", response_model=Review)
-def create_review(review_in: ReviewCreate):
-    new_id = max([r["id"] for r in reviews_db], default=0) + 1
-    sentiment = analyze_sentiment(review_in.rating, review_in.review_text)
-    new_review = {
-        "id": new_id,
-        "hotel_name": review_in.hotel_name,
-        "rating": review_in.rating,
-        "review_text": review_in.review_text,
-        "sentiment": sentiment
-    }
-    reviews_db.insert(0, new_review)
-    return new_review
+    # Hotel avg ratings
+    hotel_avg_ratings = {}
+    if "hotel_name" in df.columns and "rating" in df.columns:
+        hotel_avg_ratings = df.groupby("hotel_name")["rating"].mean().round(2).to_dict()
 
-@app.get("/api/dashboard")
-def get_dashboard_stats():
-    total_reviews = len(reviews_db)
-    if total_reviews > 0:
-        avg_rating = sum(r["rating"] for r in reviews_db) / total_reviews
-    else:
-        avg_rating = 0.0
-
-    positive_count = sum(1 for r in reviews_db if r["sentiment"] == "Positive")
-    neutral_count = sum(1 for r in reviews_db if r["sentiment"] == "Neutral")
-    negative_count = sum(1 for r in reviews_db if r["sentiment"] == "Negative")
-
-    rating_1 = sum(1 for r in reviews_db if r["rating"] == 1)
-    rating_2 = sum(1 for r in reviews_db if r["rating"] == 2)
-    rating_3 = sum(1 for r in reviews_db if r["rating"] == 3)
-    rating_4 = sum(1 for r in reviews_db if r["rating"] == 4)
-    rating_5 = sum(1 for r in reviews_db if r["rating"] == 5)
-
-    stats = {
-        "total_reviews": total_reviews,
-        "avg_rating": avg_rating,
-        "positive_count": positive_count,
-        "neutral_count": neutral_count,
-        "negative_count": negative_count,
-        "rating_1": rating_1,
-        "rating_2": rating_2,
-        "rating_3": rating_3,
-        "rating_4": rating_4,
-        "rating_5": rating_5,
-    }
+    # Recent reviews
+    recent_reviews = df.tail(10).to_dict(orient="records")
 
     return {
-        "stats": stats,
-        "reviews": reviews_db
+        "total_reviews": total_reviews,
+        "avg_rating": avg_rating,
+        "positive_percentage": positive_percentage,
+        "negative_percentage": negative_percentage,
+        "sentiment_counts": sentiment_counts,
+        "rating_counts": rating_counts,
+        "hotel_avg_ratings": hotel_avg_ratings,
+        "recent_reviews": recent_reviews
     }
 
 @app.get("/")
-def serve_index():
-    frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/index.html"))
-    if os.path.exists(frontend_path):
-        return FileResponse(frontend_path)
+def read_root():
+    if os.path.exists("frontend/index.html"):
+        with open("frontend/index.html", "r") as f:
+            return HTMLResponse(content=f.read())
     return {"message": "Frontend index.html not found"}
+
+@app.get("/api/analytics")
+def get_analytics():
+    global df_reviews
+    return compute_analytics(df_reviews)
+
+@app.post("/api/upload")
+async def upload_csv(file: UploadFile = File(...)):
+    global df_reviews
+    try:
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
+        
+        # Normalize columns if needed
+        expected_columns = ["hotel_name", "reviewer_name", "rating", "sentiment", "comment"]
+        # Basic validation and fallback standardization
+        df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
+        
+        # Ensure mandatory columns exist
+        if "rating" not in df.columns:
+            raise HTTPException(status_code=400, detail="CSV must contain a 'rating' column")
+        
+        if "sentiment" not in df.columns:
+            # Simple auto-sentiment generation if missing
+            def guess_sentiment(r):
+                try:
+                    val = float(r)
+                    if val >= 4: return "Positive"
+                    elif val <= 2: return "Negative"
+                    return "Neutral"
+                except:
+                    return "Neutral"
+            df["sentiment"] = df["rating"].apply(guess_sentiment)
+            
+        if "hotel_name" not in df.columns:
+            df["hotel_name"] = "Unknown Hotel"
+            
+        if "reviewer_name" not in df.columns:
+            df["reviewer_name"] = "Anonymous"
+            
+        if "comment" not in df.columns:
+            df["comment"] = ""
+
+        df_reviews = df
+        return compute_analytics(df_reviews)
+    except Exception as e:
+
+        raise HTTPException(status_code=400, detail=str(e))
