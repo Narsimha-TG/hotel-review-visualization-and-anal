@@ -1,181 +1,158 @@
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
-from typing import Optional, List
-import uuid
+from fastapi.responses import FileResponse
 import os
+from pydantic import BaseModel
+from typing import List, Optional
 
-app = FastAPI(title="Hotel Review Visualization and Analysis Dashboard")
+app = FastAPI(
+    title="Hotel Review Visualization and Analysis Dashboard",
+    description="Backend API for hotel reviews sentiment and rating analysis",
+    version="1.0.0"
+)
 
-# In-memory database with initial sample reviews
-REVIEWS_DB = [
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mock dataset for Hotel Reviews
+MOCK_REVIEWS = [
     {
-        "id": "rev-1",
-        "hotel_name": "Grand Plaza Hotel",
+        "id": 1,
+        "author": "Sarah Jenkins",
         "rating": 5,
-        "review_text": "Absolutely wonderful stay! The staff were extremely helpful, rooms were spotless, and the breakfast buffet was delicious.",
-        "sentiment": "Positive",
-        "author": "Sarah Jenkins"
+        "sentiment": "positive",
+        "text": "Absolute gem of a hotel! The staff went above and beyond to make our anniversary special. Sparkling clean rooms and fantastic breakfast.",
+        "date": "2025-02-18"
     },
     {
-        "id": "rev-2",
-        "hotel_name": "Grand Plaza Hotel",
+        "id": 2,
+        "author": "Michael Chang",
         "rating": 2,
-        "review_text": "Disappointing experience. The air conditioning was broken for half our stay and front desk ignored our complaints.",
-        "sentiment": "Negative",
-        "author": "Michael Chang"
+        "sentiment": "negative",
+        "text": "Very disappointing stay. The AC unit was extremely loud all night and the front desk staff was indifferent to our complaints.",
+        "date": "2025-02-17"
     },
     {
-        "id": "rev-3",
-        "hotel_name": "Ocean View Resort",
+        "id": 3,
+        "author": "Elena Rostova",
         "rating": 4,
-        "review_text": "Great beachside location and stunning sunset views. Rooms are a bit dated but very clean.",
-        "sentiment": "Positive",
-        "author": "Emma Watson"
+        "sentiment": "positive",
+        "text": "Great location right in the city center. Walkable to all major attractions. Room was slightly small but very cozy.",
+        "date": "2025-02-15"
     },
     {
-        "id": "rev-4",
-        "hotel_name": "Ocean View Resort",
+        "id": 4,
+        "author": "David Smith",
         "rating": 3,
-        "review_text": "Average hotel. Nothing special. Food at the restaurant was mediocre and overpriced.",
-        "sentiment": "Neutral",
-        "author": "David Miller"
+        "sentiment": "neutral",
+        "text": "Average experience overall. The pool was closed for maintenance which was a bummer, but the restaurant had good food.",
+        "date": "2025-02-14"
     },
     {
-        "id": "rev-5",
-        "hotel_name": "Mountain Lodge & Spa",
+        "id": 5,
+        "author": "Jessica Taylor",
         "rating": 5,
-        "review_text": "Incredible mountain retreat! The spa treatments were world-class and the fireplace in the suite was very cozy.",
-        "sentiment": "Positive",
-        "author": "Jessica Taylor"
+        "sentiment": "positive",
+        "text": "Breathtaking ocean views and world-class spa facilities. Can't wait to come back for our next vacation!",
+        "date": "2025-02-12"
     },
     {
-        "id": "rev-6",
-        "hotel_name": "Urban Express Inn",
+        "id": 6,
+        "author": "Robert Downey",
         "rating": 1,
-        "review_text": "Terrible noise from the street all night long. Bed was uncomfortable and Wi-Fi did not work at all.",
-        "sentiment": "Negative",
-        "author": "Robert Downey"
+        "sentiment": "negative",
+        "text": "Terrible customer service and found hair in the bathroom upon arrival. Will not be recommending to anyone.",
+        "date": "2025-02-10"
+    },
+    {
+        "id": 7,
+        "author": "Amanda White",
+        "rating": 4,
+        "sentiment": "positive",
+        "text": "Very comfortable beds and quiet rooms. Excellent choice for business travelers looking for reliable Wi-Fi and workspace.",
+        "date": "2025-02-09"
+    },
+    {
+        "id": 8,
+        "author": "Carlos Santana",
+        "rating": 3,
+        "sentiment": "neutral",
+        "text": "Decent hotel for the price point. Breakfast buffet could use more variety, but room cleanliness was satisfactory.",
+        "date": "2025-02-08"
+    },
+    {
+        "id": 9,
+        "author": "Emily Blunt",
+        "rating": 5,
+        "sentiment": "positive",
+        "text": "Immaculate design, friendly concierge, and delicious cocktails at the rooftop bar. 10/10 stay!",
+        "date": "2025-02-05"
+    },
+    {
+        "id": 10,
+        "author": "Liam Neeson",
+        "rating": 2,
+        "sentiment": "negative",
+        "text": "Room was much smaller than pictured online and hallway noise kept waking us up.",
+        "date": "2025-02-03"
     }
 ]
 
-class ReviewCreate(BaseModel):
-    hotel_name: str
-    rating: int = Field(..., ge=1, le=5)
-    review_text: str
-    author: Optional[str] = "Anonymous"
-
-class Review(ReviewCreate):
-    id: str
+class Review(BaseModel):
+    id: int
+    author: str
+    rating: int
     sentiment: str
+    text: str
+    date: str
 
-def analyze_sentiment(rating: int, text: str) -> str:
-    text_lower = text.lower()
-    positive_keywords = ["wonderful", "great", "excellent", "amazing", "fantastic", "spotless", "delicious", "helpful", "stunning", "cozy", "world-class", "love"]
-    negative_keywords = ["disappointing", "broken", "ignored", "mediocre", "overpriced", "terrible", "noise", "uncomfortable", "bad", "horrible", "poor"]
+@app.get("/api/health")
+def health_check():
+    return {"status": "healthy", "message": "Hotel Review Dashboard API is running"}
+
+@app.get("/api/reviews")
+def get_reviews(sentiment: Optional[str] = Query(None, description="Filter by sentiment: positive, neutral, negative")):
+    filtered = MOCK_REVIEWS
+    if sentiment and sentiment.lower() != "all":
+        filtered = [r for r in MOCK_REVIEWS if r["sentiment"] == sentiment.lower()]
+
+    # Calculate statistics
+    total_reviews = len(MOCK_REVIEWS)
+    average_rating = sum(r["rating"] for r in MOCK_REVIEWS) / total_reviews if total_reviews > 0 else 0
     
-    pos_score = sum(1 for w in positive_keywords if w in text_lower)
-    neg_score = sum(1 for w in negative_keywords if w in text_lower)
-    
-    if rating >= 4 or pos_score > neg_score:
-        return "Positive"
-    elif rating <= 2 or neg_score > pos_score:
-        return "Negative"
-    else:
-        return "Neutral"
+    sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
+    rating_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
-@app.get("/api/hotels", response_model=List[str])
-def get_hotels():
-    hotels = sorted(list(set(r["hotel_name"] for r in REVIEWS_DB)))
-    return hotels
-
-@app.get("/api/reviews", response_model=List[Review])
-def get_reviews(
-    hotel: Optional[str] = None,
-    sentiment: Optional[str] = None,
-    search: Optional[str] = None
-):
-    filtered = REVIEWS_DB
-    if hotel and hotel != "ALL":
-        filtered = [r for r in filtered if r["hotel_name"].lower() == hotel.lower()]
-    if sentiment and sentiment != "ALL":
-        filtered = [r for r in filtered if r["sentiment"].lower() == sentiment.lower()]
-    if search:
-        q = search.lower()
-        filtered = [r for r in filtered if q in r["review_text"].lower() or q in r["hotel_name"].lower() or q in r["author"].lower()]
-    return filtered
-
-@app.post("/api/reviews", response_model=Review)
-def create_review(payload: ReviewCreate):
-    sentiment = analyze_sentiment(payload.rating, payload.review_text)
-    new_rev = {
-        "id": f"rev-{uuid.uuid4().hex[:8]}",
-        "hotel_name": payload.hotel_name,
-        "rating": payload.rating,
-        "review_text": payload.review_text,
-        "sentiment": sentiment,
-        "author": payload.author or "Anonymous"
-    }
-    REVIEWS_DB.insert(0, new_rev)
-    return new_rev
-
-@app.delete("/api/reviews/{review_id}")
-def delete_review(review_id: str):
-    global REVIEWS_DB
-    initial_len = len(REVIEWS_DB)
-    REVIEWS_DB = [r for r in REVIEWS_DB if r["id"] != review_id]
-    if len(REVIEWS_DB) == initial_len:
-        raise HTTPException(status_code=404, detail="Review not found")
-    return {"status": "success", "message": "Review deleted"}
-
-@app.get("/api/stats")
-def get_stats(hotel: Optional[str] = None):
-    target_reviews = REVIEWS_DB
-    if hotel and hotel != "ALL":
-        target_reviews = [r for r in target_reviews if r["hotel_name"].lower() == hotel.lower()]
-    
-    total = len(target_reviews)
-    if total == 0:
-        return {
-            "total_reviews": 0,
-            "avg_rating": 0.0,
-            "positive_percentage": 0.0,
-            "negative_percentage": 0.0,
-            "neutral_percentage": 0.0,
-            "rating_counts": {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0},
-            "sentiment_counts": {"Positive": 0, "Neutral": 0, "Negative": 0}
-        }
-    
-    avg_rating = sum(r["rating"] for r in target_reviews) / total
-    
-    sentiment_counts = {"Positive": 0, "Neutral": 0, "Negative": 0}
-    for r in target_reviews:
+    for r in MOCK_REVIEWS:
         s = r["sentiment"]
         if s in sentiment_counts:
             sentiment_counts[s] += 1
-            
-    rating_counts = {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
-    for r in target_reviews:
-        rating_counts[str(r["rating"])] += 1
-        
-    pos_pct = (sentiment_counts["Positive"] / total) * 100
-    neg_pct = (sentiment_counts["Negative"] / total) * 100
-    neu_pct = (sentiment_counts["Neutral"] / total) * 100
-    
-    return {
-        "total_reviews": total,
-        "avg_rating": avg_rating,
-        "positive_percentage": pos_pct,
-        "negative_percentage": neg_pct,
-        "neutral_percentage": neu_pct,
-        "rating_counts": rating_counts,
-        "sentiment_counts": sentiment_counts
+        rt = r["rating"]
+        if rt in rating_counts:
+            rating_counts[rt] += 1
+
+    stats = {
+        "total_reviews": total_reviews,
+        "average_rating": round(average_rating, 2),
+        "sentiment_counts": sentiment_counts,
+        "rating_counts": rating_counts
     }
 
+    return {
+        "stats": stats,
+        "reviews": filtered
+    }
+
+# Serve frontend index.html at root if frontend file exists
 @app.get("/")
-def serve_frontend():
-    frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/index.html"))
-    if os.path.exists(frontend_path):
-        return FileResponse(frontend_path)
-    return HTMLResponse("<h3>Frontend index.html not found</h3>", status_code=404)
+def serve_index():
+    index_path = os.path.join("frontend", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"message": "Welcome to Hotel Review Analysis API. Frontend index.html not found in container root."}

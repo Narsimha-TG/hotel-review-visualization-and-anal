@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Review Visualization and Analysis Dashboard</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,247 +12,195 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#fef2f2',
-                            100: '#fee2e2',
-                            500: '#ef4444',
-                            600: '#dc2626',
-                            700: '#b91c1c',
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
                         }
                     }
                 }
             }
         }
     </script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom scrollbar and transitions */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
-    <div class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-slate-800 dark:bg-slate-800 border-b border-slate-700 shadow-md sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-red-600 text-white p-2.5 rounded-lg shadow">
-                        <i class="fa-solid fa-hotel text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold tracking-tight text-white">HotelReview <span class="text-red-500">Analytics</span></h1>
-                        <p class="text-xs text-slate-400">Insights & Sentiment Dashboard</p>
-                    </div>
+    <!-- Navigation Header -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-primary-600 text-white p-2 rounded-lg shadow">
+                    <i class="fa-solid fa-hotel text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg sm:text-xl tracking-tight">Hotel Analytics</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Review Visualization & Insight Dashboard</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition focus:outline-none">
+                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+                
+                <div class="text-right hidden sm:block">
+                    <span id="systemStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> System Online
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- KPI Metrics Grid -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Reviews</p>
+                    <h3 id="kpiTotalReviews" class="text-2xl font-bold mt-1 text-slate-900 dark:text-white">--</h3>
+                </div>
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
+                    <i class="fa-solid fa-comments text-xl"></i>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Average Rating</p>
+                    <h3 id="kpiAvgRating" class="text-2xl font-bold mt-1 text-slate-900 dark:text-white">--</h3>
+                </div>
+                <div class="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg">
+                    <i class="fa-solid fa-star text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Positive Sentiment</p>
+                    <h3 id="kpiPositive" class="text-2xl font-bold mt-1 text-slate-900 dark:text-white">--</h3>
+                </div>
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                    <i class="fa-solid fa-face-smile text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Negative Sentiment</p>
+                    <h3 id="kpiNegative" class="text-2xl font-bold mt-1 text-slate-900 dark:text-white">--</h3>
+                </div>
+                <div class="p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg">
+                    <i class="fa-solid fa-face-frown text-xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Sentiment Distribution Chart -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-semibold text-base text-slate-900 dark:text-white">Sentiment Breakdown</h2>
+                    <i class="fa-solid fa-chart-pie text-slate-400"></i>
+                </div>
+                <div class="relative h-64 flex items-center justify-center">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Rating Trend / Distribution Chart -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-semibold text-base text-slate-900 dark:text-white">Rating Distribution</h2>
+                    <i class="fa-solid fa-chart-bar text-slate-400"></i>
+                </div>
+                <div class="relative h-64 flex items-center justify-center">
+                    <canvas id="ratingChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter & Reviews Data Table Section -->
+        <section class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="font-semibold text-lg text-slate-900 dark:text-white">Review Feed & Analysis</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Browse and filter user reviews by sentiment or search content</p>
                 </div>
                 
-                <div class="flex items-center space-x-4">
-                    <!-- Theme Toggle Button -->
-                    <button id="themeToggle" onclick="toggleTheme()" class="p-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition focus:outline-none" title="Toggle Dark/Light Mode">
-                        <i id="themeIcon" class="fa-solid fa-sun text-yellow-400"></i>
-                    </button>
-
-                    <div class="hidden md:flex items-center space-x-2 text-sm bg-slate-700 px-3 py-1.5 rounded-lg">
-                        <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-slate-300">System Active</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-            <!-- Filter & Controls Toolbar -->
-            <section class="bg-slate-800 dark:bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Hotel Filter</label>
-                    <select id="hotelFilter" onchange="loadDashboard()" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                        <option value="ALL">All Hotels</option>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Filter by Sentiment -->
+                    <select id="sentimentFilter" onchange="filterReviews()" class="bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <option value="all">All Sentiments</option>
+                        <option value="positive">Positive</option>
+                        <option value="neutral">Neutral</option>
+                        <option value="negative">Negative</option>
                     </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Sentiment Filter</label>
-                    <select id="sentimentFilter" onchange="loadDashboard()" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                        <option value="ALL">All Sentiments</option>
-                        <option value="Positive">Positive</option>
-                        <option value="Neutral">Neutral</option>
-                        <option value="Negative">Negative</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Search Reviews</label>
+
+                    <!-- Search Input -->
                     <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Keyword search..." oninput="debounceSearch()" class="w-full bg-slate-700 border border-slate-600 text-slate-100 placeholder-slate-400 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                        <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-search text-xs"></i>
+                        </span>
+                        <input type="text" id="searchInput" oninput="filterReviews()" placeholder="Search reviews..." class="bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500">
                     </div>
                 </div>
-                <div class="flex items-end justify-end space-x-2">
-                    <button onclick="resetFilters()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">
-                        <i class="fa-solid fa-rotate-right mr-1.5"></i> Reset
-                    </button>
-                    <button onclick="openAddModal()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg shadow transition">
-                        <i class="fa-solid fa-plus mr-1.5"></i> Add Review
-                    </button>
-                </div>
-            </section>
-
-            <!-- KPI Summary Cards -->
-            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Reviews</p>
-                        <h3 id="kpiTotalReviews" class="text-2xl font-bold text-white mt-1">0</h3>
-                    </div>
-                    <div class="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
-                        <i class="fa-solid fa-comments text-xl"></i>
-                    </div>
-                </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Avg Rating</p>
-                        <h3 id="kpiAvgRating" class="text-2xl font-bold text-white mt-1">0.0 / 5</h3>
-                    </div>
-                    <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
-                        <i class="fa-solid fa-star text-xl"></i>
-                    </div>
-                </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Positive Sentiment</p>
-                        <h3 id="kpiPositivePct" class="text-2xl font-bold text-emerald-400 mt-1">0%</h3>
-                    </div>
-                    <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
-                        <i class="fa-solid fa-face-smile text-xl"></i>
-                    </div>
-                </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Negative Sentiment</p>
-                        <h3 id="kpiNegativePct" class="text-2xl font-bold text-red-400 mt-1">0%</h3>
-                    </div>
-                    <div class="p-3 bg-red-500/10 text-red-400 rounded-xl">
-                        <i class="fa-solid fa-face-frown text-xl"></i>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Charts Section -->
-            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Rating Distribution Chart -->
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-base font-bold text-white">Rating Distribution</h2>
-                        <i class="fa-solid fa-chart-bar text-slate-400"></i>
-                    </div>
-                    <div class="relative h-64">
-                        <canvas id="ratingChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Sentiment Breakdown Chart -->
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-base font-bold text-white">Sentiment Proportion</h2>
-                        <i class="fa-solid fa-chart-pie text-slate-400"></i>
-                    </div>
-                    <div class="relative h-64 flex justify-center">
-                        <canvas id="sentimentChart"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Reviews Feed Table / Cards -->
-            <section class="bg-slate-800 border border-slate-700 rounded-xl shadow-sm overflow-hidden">
-                <div class="p-5 border-b border-slate-700 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-base font-bold text-white">Recent Reviews</h2>
-                        <p class="text-xs text-slate-400">Filtered customer reviews and AI sentiment tagging</p>
-                    </div>
-                    <span id="reviewCountBadge" class="text-xs bg-slate-700 px-2.5 py-1 rounded-full text-slate-300">0 reviews</span>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-700">
-                                <th class="py-3 px-4">Hotel</th>
-                                <th class="py-3 px-4">Rating</th>
-                                <th class="py-3 px-4">Review</th>
-                                <th class="py-3 px-4">Sentiment</th>
-                                <th class="py-3 px-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reviewsTableBody" class="divide-y divide-slate-700 text-sm">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Empty State -->
-                <div id="emptyState" class="hidden p-12 text-center">
-                    <i class="fa-solid fa-folder-open text-4xl text-slate-500 mb-3"></i>
-                    <p class="text-slate-400 font-medium">No reviews found matching your filters.</p>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="bg-slate-800 border-t border-slate-700 mt-12 py-4 text-center text-xs text-slate-400">
-            Hotel Review Visualization & Analysis Dashboard &bull; Built with FastAPI & Tailwind CSS
-        </footer>
-    </div>
-
-    <!-- Add Review Modal -->
-    <div id="addModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
-                <h3 class="text-lg font-bold text-white">Add New Hotel Review</h3>
-                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
             </div>
 
-            <form id="addReviewForm" onsubmit="submitReview(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Hotel Name</label>
-                    <input type="text" id="newHotelName" required placeholder="e.g. Grand Plaza Hotel" class="w-full bg-slate-700 border border-slate-600 text-slate-100 placeholder-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                </div>
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                            <th class="py-3.5 px-6">Reviewer</th>
+                            <th class="py-3.5 px-6">Rating</th>
+                            <th class="py-3.5 px-6">Sentiment</th>
+                            <th class="py-3.5 px-6">Review Text</th>
+                            <th class="py-3.5 px-6">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewsTableBody" class="divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination / Counter Footer -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span id="reviewCountInfo">Showing all reviews</span>
+            </div>
+        </section>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Rating (1 - 5)</label>
-                        <select id="newRating" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                            <option value="5">5 - Excellent</option>
-                            <option value="4">4 - Very Good</option>
-                            <option value="3">3 - Average</option>
-                            <option value="2">2 - Poor</option>
-                            <option value="1">1 - Terrible</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Author</label>
-                        <input type="text" id="newAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-700 border border-slate-600 text-slate-100 placeholder-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                    </div>
-                </div>
+    </main>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Review Text</label>
-                    <textarea id="newReviewText" rows="4" required placeholder="Write your detailed review here... Sentiment will be analyzed automatically." class="w-full bg-slate-700 border border-slate-600 text-slate-100 placeholder-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Cancel</button>
-                    <button type="submit" class="px-5 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg shadow transition">Submit & Analyze</button>
-                </div>
-            </form>
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mt-auto py-4">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400">
+            &copy; 2025 Hotel Review Visualization and Analysis Dashboard. All rights reserved.
         </div>
-    </div>
+    </footer>
 
-    <!-- JavaScript App Logic -->
+    <!-- App Logic -->
     <script>
-        let ratingChartInstance = null;
+        let allReviews = [];
         let sentimentChartInstance = null;
-        let searchTimer = null;
+        let ratingChartInstance = null;
 
         // Theme Management
         function toggleTheme() {
@@ -261,222 +209,72 @@
             if (html.classList.contains('dark')) {
                 html.classList.remove('dark');
                 localStorage.setItem('theme', 'light');
-                icon.className = 'fa-solid fa-moon text-slate-700';
-                applyLightModeStyles();
+                icon.className = 'fa-solid fa-moon text-lg';
             } else {
                 html.classList.add('dark');
                 localStorage.setItem('theme', 'dark');
-                icon.className = 'fa-solid fa-sun text-yellow-400';
-                applyDarkModeStyles();
+                icon.className = 'fa-solid fa-sun text-lg text-amber-400';
             }
-            loadDashboard();
+            updateChartsTheme();
         }
 
-        function initTheme() {
+        // Init Theme on Load
+        (function() {
             const savedTheme = localStorage.getItem('theme');
-            const html = document.documentElement;
             const icon = document.getElementById('themeIcon');
-            if (savedTheme === 'light') {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-moon text-slate-700';
-                applyLightModeStyles();
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                if (icon) icon.className = 'fa-solid fa-sun text-lg text-amber-400';
             } else {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-sun text-yellow-400';
-                applyDarkModeStyles();
+                document.documentElement.classList.remove('dark');
+                if (icon) icon.className = 'fa-solid fa-moon text-lg';
             }
-        }
+        })();
 
-        function applyLightModeStyles() {
-            document.body.className = 'bg-slate-100 text-slate-800 transition-colors duration-200';
-            document.querySelectorAll('header').forEach(el => el.className = 'bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50');
-            document.querySelectorAll('main > section').forEach(el => {
-                if (!el.classList.contains('grid-cols-4')) {
-                    el.className = el.className.replace(/bg-slate-800/g, 'bg-white').replace(/border-slate-700/g, 'border-slate-200');
-                }
-            });
-            document.querySelectorAll('.grid-cols-4 > div').forEach(el => {
-                el.className = 'bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex items-center justify-between';
-            });
-            document.querySelectorAll('input, select, textarea').forEach(el => {
-                el.className = el.className.replace(/bg-slate-700/g, 'bg-slate-50').replace(/border-slate-600/g, 'border-slate-300').replace(/text-slate-100/g, 'text-slate-800');
-            });
-        }
-
-        function applyDarkModeStyles() {
-            document.body.className = 'bg-slate-900 text-slate-100 transition-colors duration-200';
-            document.querySelectorAll('header').forEach(el => el.className = 'bg-slate-800 border-b border-slate-700 shadow-md sticky top-0 z-50');
-            document.querySelectorAll('main > section').forEach(el => {
-                el.className = el.className.replace(/bg-white/g, 'bg-slate-800').replace(/border-slate-200/g, 'border-slate-700');
-            });
-            document.querySelectorAll('.grid-cols-4 > div').forEach(el => {
-                el.className = 'bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between';
-            });
-            document.querySelectorAll('input, select, textarea').forEach(el => {
-                el.className = el.className.replace(/bg-slate-50/g, 'bg-slate-700').replace(/border-slate-300/g, 'border-slate-600').replace(/text-slate-800/g, 'text-slate-100');
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initTheme();
-            loadHotels();
-            loadDashboard();
-        });
-
-        async function loadHotels() {
+        // Fetch data from backend API
+        async function fetchDashboardData() {
             try {
-                const res = await fetch('/api/hotels');
-                const hotels = await res.json();
-                const select = document.getElementById('hotelFilter');
-                const currentVal = select.value;
-                select.innerHTML = '<option value="ALL">All Hotels</option>';
-                hotels.forEach(h => {
-                    select.innerHTML += `<option value="${h}">${h}</option>`;
-                });
-                select.value = currentVal;
-            } catch (e) {
-                console.error('Failed to load hotels', e);
-            }
-        }
-
-        async function loadDashboard() {
-            const hotel = document.getElementById('hotelFilter').value;
-            const sentiment = document.getElementById('sentimentFilter').value;
-            const search = document.getElementById('searchInput').value;
-
-            let url = '/api/reviews?';
-            if (hotel && hotel !== 'ALL') url += `hotel=${encodeURIComponent(hotel)}&`;
-            if (sentiment && sentiment !== 'ALL') url += `sentiment=${encodeURIComponent(sentiment)}&`;
-            if (search) url += `search=${encodeURIComponent(search)}&`;
-
-            try {
-                const [reviewsRes, statsRes] = await Promise.all([
-                    fetch(url),
-                    fetch('/api/stats' + (hotel && hotel !== 'ALL' ? `?hotel=${encodeURIComponent(hotel)}` : ''))
-                ]);
-
-                const reviews = await reviewsRes.json();
-                const stats = await statsRes.json();
-
-                updateKPIs(stats, reviews);
-                renderReviewsTable(reviews);
-                renderCharts(stats);
-            } catch (e) {
-                console.error('Failed to load dashboard data', e);
-            }
-        }
-
-        function updateKPIs(stats, reviews) {
-            document.getElementById('kpiTotalReviews').innerText = stats.total_reviews;
-            document.getElementById('kpiAvgRating').innerText = stats.avg_rating.toFixed(1) + ' / 5';
-            document.getElementById('kpiPositivePct').innerText = stats.positive_percentage.toFixed(0) + '%';
-            document.getElementById('kpiNegativePct').innerText = stats.negative_percentage.toFixed(0) + '%';
-            document.getElementById('reviewCountBadge').innerText = `${reviews.length} reviews`;
-        }
-
-        function renderReviewsTable(reviews) {
-            const tbody = document.getElementById('reviewsTableBody');
-            const emptyState = document.getElementById('emptyState');
-            tbody.innerHTML = '';
-
-            if (reviews.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            }
-            emptyState.classList.add('hidden');
-
-            reviews.forEach(r => {
-                let sentimentBadge = '';
-                if (r.sentiment === 'Positive') {
-                    sentimentBadge = '<span class="px-2.5 py-1 text-xs font-semibold bg-emerald-500/10 text-emerald-400 rounded-full inline-flex items-center"><i class="fa-solid fa-circle text-[8px] mr-1.5"></i>Positive</span>';
-                } else if (r.sentiment === 'Negative') {
-                    sentimentBadge = '<span class="px-2.5 py-1 text-xs font-semibold bg-red-500/10 text-red-400 rounded-full inline-flex items-center"><i class="fa-solid fa-circle text-[8px] mr-1.5"></i>Negative</span>';
-                } else {
-                    sentimentBadge = '<span class="px-2.5 py-1 text-xs font-semibold bg-amber-500/10 text-amber-400 rounded-full inline-flex items-center"><i class="fa-solid fa-circle text-[8px] mr-1.5"></i>Neutral</span>';
-                }
-
-                const isDark = document.documentElement.classList.contains('dark');
-                const rowHoverClass = isDark ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50';
-
-                tbody.innerHTML += `
-                    <tr class="${rowHoverClass} transition">
-                        <td class="py-3 px-4 font-medium text-white dark:text-white">
-                            ${r.hotel_name}
-                            <div class="text-xs text-slate-400 font-normal">By ${r.author || 'Anonymous'}</div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center text-amber-400">
-                                <span class="font-bold text-slate-200 dark:text-slate-200 mr-1.5">${r.rating}</span>
-                                <i class="fa-solid fa-star text-xs"></i>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 max-w-md truncate text-slate-300 dark:text-slate-300" title="${escapeHtml(r.review_text)}">
-                            ${escapeHtml(r.review_text)}
-                        </td>
-                        <td class="py-3 px-4">${sentimentBadge}</td>
-                        <td class="py-3 px-4 text-right">
-                            <button onclick="deleteReview('${r.id}')" class="text-slate-400 hover:text-red-400 p-1.5 transition" title="Delete Review">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
+                const response = await fetch('/api/reviews');
+                const data = await response.json();
+                allReviews = data.reviews;
+                
+                updateKPIs(data.stats);
+                renderCharts(data.stats);
+                renderReviewsTable(allReviews);
+            } catch (error) {
+                console.error('Failed to fetch dashboard data:', error);
+                document.getElementById('systemStatus').innerHTML = `
+                    <span class="w-1.5 h-1.5 mr-1.5 bg-rose-500 rounded-full"></span> Offline / Error
                 `;
-            });
+            }
+        }
+
+        function updateKPIs(stats) {
+            document.getElementById('kpiTotalReviews').innerText = stats.total_reviews.toLocaleString();
+            document.getElementById('kpiAvgRating').innerText = stats.average_rating.toFixed(1) + ' / 5';
+            document.getElementById('kpiPositive').innerText = stats.sentiment_counts.positive + ' (' + ((stats.sentiment_counts.positive / stats.total_reviews) * 100).toFixed(0) + '%)';
+            document.getElementById('kpiNegative').innerText = stats.sentiment_counts.negative + ' (' + ((stats.sentiment_counts.negative / stats.total_reviews) * 100).toFixed(0) + '%)';
         }
 
         function renderCharts(stats) {
             const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#cbd5e1' : '#475569';
-            const gridColor = isDark ? '#334155' : '#e2e8f0';
-
-            // Rating Chart
-            const ratingCtx = document.getElementById('ratingChart').getContext('2d');
-            if (ratingChartInstance) ratingChartInstance.destroy();
-
-            const ratingsData = [stats.rating_counts['1'], stats.rating_counts['2'], stats.rating_counts['3'], stats.rating_counts['4'], stats.rating_counts['5']];
-
-            ratingChartInstance = new Chart(ratingCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
-                    datasets: [{
-                        label: 'Review Count',
-                        data: ratingsData,
-                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#10b981'],
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: gridColor },
-                            ticks: { color: textColor, precision: 0 }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: textColor }
-                        }
-                    }
-                }
-            });
-
-            // Sentiment Chart
-            const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            
+            // Sentiment Donut Chart
+            const ctxSentiment = document.getElementById('sentimentChart').getContext('2d');
             if (sentimentChartInstance) sentimentChartInstance.destroy();
-
-            sentimentChartInstance = new Chart(sentimentCtx, {
+            
+            sentimentChartInstance = new Chart(ctxSentiment, {
                 type: 'doughnut',
                 data: {
                     labels: ['Positive', 'Neutral', 'Negative'],
                     datasets: [{
-                        data: [stats.sentiment_counts.Positive, stats.sentiment_counts.Neutral, stats.sentiment_counts.Negative],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        data: [
+                            stats.sentiment_counts.positive,
+                            stats.sentiment_counts.neutral,
+                            stats.sentiment_counts.negative
+                        ],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
                         borderWidth: 0
                     }]
                 },
@@ -488,80 +286,111 @@
                             position: 'bottom',
                             labels: { color: textColor, boxWidth: 12 }
                         }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // Rating Bar Chart
+            const ctxRating = document.getElementById('ratingChart').getContext('2d');
+            if (ratingChartInstance) ratingChartInstance.destroy();
+
+            const ratings = [1, 2, 3, 4, 5];
+            const ratingCounts = ratings.map(r => stats.rating_counts[r] || 0);
+
+            ratingChartInstance = new Chart(ctxRating, {
+                type: 'bar',
+                data: {
+                    labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+                    datasets: [{
+                        label: 'Reviews',
+                        data: ratingCounts,
+                        backgroundColor: '#0ea5e9',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            grid: { color: isDark ? '#334155' : '#f1f5f9' },
+                            ticks: { color: textColor, precision: 0 }
+                        }
                     }
                 }
             });
         }
 
-        function debounceSearch() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => {
-                loadDashboard();
-            }, 300);
+        function updateChartsTheme() {
+            fetchDashboardData();
         }
 
-        function resetFilters() {
-            document.getElementById('hotelFilter').value = 'ALL';
-            document.getElementById('sentimentFilter').value = 'ALL';
-            document.getElementById('searchInput').value = '';
-            loadDashboard();
-        }
+        function renderReviewsTable(reviews) {
+            const tbody = document.getElementById('reviewsTableBody');
+            tbody.innerHTML = '';
 
-        function openAddModal() {
-            document.getElementById('addModal').classList.remove('hidden');
-        }
-
-        function closeAddModal() {
-            document.getElementById('addModal').classList.add('hidden');
-            document.getElementById('addReviewForm').reset();
-        }
-
-        async function submitReview(e) {
-            e.preventDefault();
-            const payload = {
-                hotel_name: document.getElementById('newHotelName').value,
-                rating: parseInt(document.getElementById('newRating').value),
-                review_text: document.getElementById('newReviewText').value,
-                author: document.getElementById('newAuthor').value || 'Anonymous'
-            };
-
-            try {
-                const res = await fetch('/api/reviews', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    closeAddModal();
-                    await loadHotels();
-                    await loadDashboard();
-                } else {
-                    alert('Failed to save review');
-                }
-            } catch (err) {
-                console.error('Error saving review', err);
+            if (reviews.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">No reviews found matching your filter.</td></tr>`;
+                document.getElementById('reviewCountInfo').innerText = 'Showing 0 reviews';
+                return;
             }
+
+            reviews.forEach(review => {
+                let badgeClass = 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300';
+                if (review.sentiment === 'positive') badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
+                else if (review.sentiment === 'negative') badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400';
+                else if (review.sentiment === 'neutral') badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50 transition';
+                tr.innerHTML = `
+                    <td class="py-3.5 px-6 font-medium text-slate-900 dark:text-white">${escapeHTML(review.author)}</td>
+                    <td class="py-3.5 px-6">
+                        <span class="inline-flex items-center text-amber-500 font-semibold">
+                            ${review.rating} <i class="fa-solid fa-star ml-1 text-xs"></i>
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-6">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${badgeClass}">${review.sentiment}</span>
+                    </td>
+                    <td class="py-3.5 px-6 text-slate-600 dark:text-slate-300 max-w-xs truncate" title="${escapeHTML(review.text)}">${escapeHTML(review.text)}</td>
+                    <td class="py-3.5 px-6 text-slate-400 text-xs">${review.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('reviewCountInfo').innerText = `Showing ${reviews.length} of ${allReviews.length} reviews`;
         }
 
-        async function deleteReview(id) {
-            if (!confirm('Are you sure you want to delete this review?')) return;
-            try {
-                const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    await loadHotels();
-                    await loadDashboard();
-                } else {
-                    alert('Failed to delete review');
-                }
-            } catch (err) {
-                console.error('Error deleting review', err);
-            }
+        function filterReviews() {
+            const sentimentVal = document.getElementById('sentimentFilter').value;
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = allReviews.filter(review => {
+                const matchesSentiment = (sentimentVal === 'all' || review.sentiment === sentimentVal);
+                const matchesSearch = review.text.toLowerCase().includes(searchVal) || review.author.toLowerCase().includes(searchVal);
+                return matchesSentiment && matchesSearch;
+            });
+
+            renderReviewsTable(filtered);
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
         }
+
+        // Initial fetch on page load
+        window.addEventListener('DOMContentLoaded', fetchDashboardData);
     </script>
 </body>
 </html>
