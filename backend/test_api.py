@@ -1,5 +1,5 @@
-from main import app
 from fastapi.testclient import TestClient
+from main import app
 
 client = TestClient(app)
 
@@ -8,12 +8,27 @@ def test_health():
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
 
-def test_reviews():
+def test_get_reviews():
     response = client.get("/api/reviews")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
-def test_analytics():
+def test_create_review():
+    payload = {
+        "hotel_name": "Grand Plaza",
+        "author": "Charlie Brown",
+        "rating": 5,
+        "comment": "Fantastic experience!",
+        "date": "2023-10-10"
+    }
+    response = client.post("/api/reviews", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["hotel_name"] == "Grand Plaza"
+    assert data["author"] == "Charlie Brown"
+    assert data["rating"] == 5
+
+def test_get_analytics():
     response = client.get("/api/analytics")
     assert response.status_code == 200
     data = response.json()
