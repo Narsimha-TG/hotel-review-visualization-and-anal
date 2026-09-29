@@ -3,82 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Review Visualization and Analysis Dashboard</title>
+    <title>Hotel Review Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        accent: '#3b82f6'
+                    }
+                }
+            }
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
-    <div class="flex justify-between items-center px-8 py-4 border-b border-slate-200 dark:border-slate-800">
-        <h1 class="text-2xl font-bold">Hotel Review Dashboard</h1>
-        <button id="themeToggle" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition">
-            Toggle Dark/Light
-        </button>
-    </div>
-    <main class="p-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow">
-            <h2 class="text-xl font-semibold mb-4">Analytics Overview</h2>
-            <div id="analytics-summary" class="mb-4">
-                <p>Total Reviews: <span id="total-reviews" class="font-bold">0</span></p>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 pb-4 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Hotel Analytics Dashboard</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Monitor reviews, metrics, and customer sentiments in real-time.</p>
             </div>
-            <canvas id="analyticsChart"></canvas>
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all duration-150 shadow-sm">
+                <svg id="sun-icon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="moon-icon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </header>
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Form & Stats -->
+            <div class="space-y-8 lg:col-span-1">
+                <!-- Stats Summary -->
+                <section id="stats_summary" class="bg-white dark:bg-cardBg p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80">
+                    <h2 class="text-lg font-semibold mb-4">Overview Metrics</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Reviews</p>
+                            <p id="stat-total" class="text-2xl font-bold mt-1 text-accent">-</p>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Avg Rating</p>
+                            <p id="stat-avg" class="text-2xl font-bold mt-1 text-emerald-500">-</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Review Form -->
+                <section id="review_form" class="bg-white dark:bg-cardBg p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80">
+                    <h2 class="text-lg font-semibold mb-4">Submit New Review</h2>
+                    <form id="new-review-form" onsubmit="submitReview(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Hotel Name</label>
+                            <input type="text" name="hotel_name" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-accent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Author</label>
+                            <input type="text" name="author" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-accent transition-all">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Rating (1-5)</label>
+                                <input type="number" name="rating" min="1" max="5" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-accent transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Date</label>
+                                <input type="date" name="date" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-accent transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Comment</label>
+                            <textarea name="comment" rows="3" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-accent transition-all"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 px-4 bg-accent hover:bg-blue-600 text-white font-medium text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-150 transform active:scale-[0.98]">
+                            Post Review
+                        </button>
+                    </form>
+                </section>
+            </div>
+
+            <!-- Right Column: Review List -->
+            <div class="lg:col-span-2">
+                <section id="review_list" class="bg-white dark:bg-cardBg p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-semibold">Recent Reviews</h2>
+                        <button onclick="loadData()" class="text-xs text-accent hover:underline font-medium">Refresh</button>
+                    </div>
+                    <div id="reviews-container" class="space-y-4">
+                        <!-- Dynamically populated -->
+                        <div class="text-center py-12 text-slate-400">Loading reviews...</div>
+                    </div>
+                </section>
+            </div>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow">
-            <h2 class="text-xl font-semibold mb-4">Submit a Review</h2>
-            <form id="reviewForm" class="flex flex-col gap-4">
-                <input type="text" id="hotel_name" placeholder="Hotel Name" required class="p-2 rounded border border-slate-300 dark:border-slate-700 bg-transparent">
-                <textarea id="comment" placeholder="Your Review" required class="p-2 rounded border border-slate-300 dark:border-slate-700 bg-transparent"></textarea>
-                <input type="number" id="rating" min="1" max="5" placeholder="Rating (1-5)" required class="p-2 rounded border border-slate-300 dark:border-slate-700 bg-transparent">
-                <button type="submit" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">Submit</button>
-            </form>
-        </div>
-    </main>
+    </div>
+
     <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
 
-        themeToggle.addEventListener('click', () => {
-            htmlElement.classList.toggle('dark');
-        });
-
-        async function loadAnalytics() {
+        async function loadData() {
             try {
-                const response = await fetch('/api/analytics');
-                const data = await response.json();
-                document.getElementById('total-reviews').textContent = data.total_reviews || 0;
+                const [reviewsRes, analyticsRes] = await Promise.all([
+                    fetch('/api/reviews'),
+                    fetch('/api/analytics')
+                ]);
+                
+                if (reviewsRes.ok) {
+                    const reviews = await reviewsRes.json();
+                    renderReviews(reviews);
+                }
+
+                if (analyticsRes.ok) {
+                    const analytics = await analyticsRes.json();
+                    renderAnalytics(analytics);
+                }
             } catch (err) {
-                console.error(err);
+                console.error('Failed to load dashboard data:', err);
             }
         }
 
-        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const review = {
-                hotel_name: document.getElementById('hotel_name').value,
-                comment: document.getElementById('comment').value,
-                rating: parseInt(document.getElementById('rating').value)
-            };
+        function renderAnalytics(data) {
+            document.getElementById('stat-total').textContent = data.total_reviews ?? data.total ?? '-';
+            document.getElementById('stat-avg').textContent = data.average_rating ? Number(data.average_rating).toFixed(1) : '-';
+        }
+
+        function renderReviews(reviews) {
+            const container = document.getElementById('reviews-container');
+            if (!reviews || reviews.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-slate-400">No reviews found. Be the first to add one!</div>';
+                return;
+            }
+
+            container.innerHTML = reviews.map(r => `
+                <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-800/40">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">${escapeHtml(r.hotel_name)}</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">By <span class="font-medium">${escapeHtml(r.author)}</span> • ${escapeHtml(r.date)}</p>
+                        </div>
+                        <div class="flex items-center space-x-1 bg-amber-500/10 text-amber-500 px-2.5 py-1 rounded-full text-xs font-bold">
+                            <span>★</span>
+                            <span>${r.rating}</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-2">${escapeHtml(r.comment)}</p>
+                </div>
+            `).join('');
+        }
+
+        async function submitReview(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const payload = Object.fromEntries(formData.entries());
+            payload.rating = Number(payload.rating);
+
             try {
-                const response = await fetch('/api/reviews', {
+                const res = await fetch('/api/reviews', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(review)
+                    body: JSON.stringify(payload)
                 });
-                if (response.status === 201) {
-                    alert('Review submitted successfully!');
-                    loadAnalytics();
-                    e.target.reset();
+
+                if (res.ok) {
+                    event.target.reset();
+                    loadData();
+                } else {
+                    alert('Failed to submit review.');
                 }
             } catch (err) {
-                console.error(err);
+                console.error('Error submitting review:', err);
             }
-        });
+        }
 
-        loadAnalytics();
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"/]/g, s => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '/': '&#x2F;'
+            }[s]));
+        }
+
+        // Initial load
+        loadData();
     </script>
 </body>
 </html>
