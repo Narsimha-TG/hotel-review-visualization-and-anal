@@ -8,58 +8,61 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
             margin: 0;
             padding: 20px;
+            background-color: #f4f6f9;
         }
-        h1, h2 {
-            color: #ffffff;
+        h1 {
+            text-align: center;
+            color: #333;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        .card {
-            background-color: #1e1e1e;
-            padding: 20px;
+        /* Buttons side to side without wrapping/scrolling */
+        .btn-group {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 15px;
             margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #333;
-            text-align: left;
-        }
-        th {
-            background-color: #2c2c2c;
-            color: #ffffff;
-        }
-        input, textarea, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            border: 1px solid #444;
-            background-color: #2c2c2c;
-            color: #ffffff;
-            border-radius: 4px;
-            box-sizing: border-box;
+            overflow-x: visible;
         }
         button {
-            background-color: #bb86fc;
-            color: #121212;
-            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            color: white;
+            font-weight: bold;
         }
-        button:hover {
-            background-color: #9965f4;
+        /* Different colors for buttons */
+        .btn-primary {
+            background-color: #3498db;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        .btn-warning {
+            background-color: #e67e22;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
         }
     </style>
 </head>
@@ -67,109 +70,40 @@
     <div class="container">
         <h1>Hotel Review Dashboard</h1>
         
-        <div class="card">
-            <h2>Analytics Summary</h2>
-            <p id="total-reviews">Total Reviews: Loading...</p>
-            <p id="avg-rating">Average Rating: Loading...</p>
+        <div class="btn-group">
+            <button class="btn-primary" onclick="loadAnalytics()">Load Analytics</button>
+            <button class="btn-success" onclick="filterPositive()">Positive Reviews</button>
+            <button class="btn-warning" onclick="filterNeutral()">Neutral Reviews</button>
+            <button class="btn-danger" onclick="filterNegative()">Negative Reviews</button>
         </div>
 
         <div class="card">
-            <h2>Submit a New Review</h2>
-            <form id="review-form">
-                <label for="hotel_name">Hotel Name:</label>
-                <input type="text" id="hotel_name" required>
-                
-                <label for="rating">Rating (1-5):</label>
-                <input type="number" id="rating" min="1" max="5" required>
-                
-                <label for="comment">Comment:</label>
-                <textarea id="comment" rows="4" required></textarea>
-                
-                <button type="submit">Submit Review</button>
-            </form>
+            <div class="stats" id="stats-container">
+                Loading analytics...
+            </div>
         </div>
 
         <div class="card">
-            <h2>Reviews List</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Hotel</th>
-                        <th>Rating</th>
-                        <th>Comment</th>
-                    </tr>
-                </thead>
-                <tbody id="reviews-table-body">
-                </tbody>
-            </table>
+            <canvas id="reviewChart"></canvas>
         </div>
     </div>
 
     <script>
-        async function fetchHealth() {
+        async function loadAnalytics() {
             try {
-                const res = await fetch('/api/health');
-                const data = await res.json();
-                console.log('Health:', data);
-            } catch (err) {
-                console.error('Health check failed', err);
+                const response = await fetch('/api/analytics');
+                const data = await response.json();
+                document.getElementById('stats-container').innerHTML = `Total Reviews: ${data.total_reviews}`;
+            } catch (error) {
+                console.error('Error loading analytics:', error);
             }
         }
 
-        async function fetchAnalytics() {
-            try {
-                const res = await fetch('/api/analytics');
-                const data = await res.json();
-                document.getElementById('total-reviews').innerText = `Total Reviews: ${data.total_reviews}`;
-                document.getElementById('avg-rating').innerText = `Average Rating: ${data.average_rating || 'N/A'}`;
-            } catch (err) {
-                console.error('Failed to fetch analytics', err);
-            }
-        }
+        function filterPositive() { alert('Showing positive reviews'); }
+        function filterNeutral() { alert('Showing neutral reviews'); }
+        function filterNegative() { alert('Showing negative reviews'); }
 
-        async function fetchReviews() {
-            try {
-                const res = await fetch('/api/reviews');
-                const reviews = await res.json();
-                const tbody = document.getElementById('reviews-table-body');
-                tbody.innerHTML = '';
-                reviews.forEach(r => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${r.hotel_name}</td><td>${r.rating}</td><td>${r.comment}</td>`;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error('Failed to fetch reviews', err);
-            }
-        }
-
-        document.getElementById('review-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const hotel_name = document.getElementById('hotel_name').value;
-            const rating = parseInt(document.getElementById('rating').value);
-            const comment = document.getElementById('comment').value;
-
-            try {
-                const res = await fetch('/api/reviews', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hotel_name, rating, comment })
-                });
-                if (res.status === 201) {
-                    document.getElementById('review-form').reset();
-                    fetchReviews();
-                    fetchAnalytics();
-                } else {
-                    alert('Failed to submit review');
-                }
-            } catch (err) {
-                console.error('Error submitting review', err);
-            }
-        });
-
-        fetchHealth();
-        fetchAnalytics();
-        fetchReviews();
+        window.onload = loadAnalytics;
     </script>
 </body>
 </html>
