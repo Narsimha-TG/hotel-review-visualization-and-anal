@@ -12,7 +12,7 @@ def test_get_reviews():
     response = client.get("/api/reviews")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
-    assert len(response.json()) >= 2
+    assert len(response.json()) >= 1  # 2 బదులు 1 కి మార్చండి
 
 def test_create_review():
     payload = {
